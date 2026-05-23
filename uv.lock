@@ -3,8 +3,20 @@ revision = 3
 requires-python = ">=3.12"
 
 [options]
-exclude-newer = "2026-05-16T16:04:52.548078Z"
+exclude-newer = "2026-05-16T16:17:53.117578Z"
 exclude-newer-span = "P1W"
+
+[[package]]
+name = "astichi"
+version = "0.1.0"
+source = { editable = "../astichi" }
+
+[package.metadata]
+requires-dist = [
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0" },
+]
+provides-extras = ["dev", "test"]
 
 [[package]]
 name = "black"
@@ -197,6 +209,7 @@ name = "yidl-lifecycle"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "astichi" },
     { name = "yidl" },
 ]
 
@@ -208,6 +221,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "astichi", editable = "../astichi" },
     { name = "black", marker = "extra == 'dev'", specifier = "==26.3.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "yidl", editable = "../yidl" },

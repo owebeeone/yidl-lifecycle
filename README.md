@@ -11,9 +11,8 @@ substrate.
 From this repository root:
 
 ```bash
-PYTHONPATH=../astichi/src uv run pytest -q
+PYTHONPATH=../astichi/src uv run --with pytest python -m pytest -q
 ```
 
 The project is expected to use the sibling `../yidl` checkout during local
 development.
-
