@@ -1,0 +1,2 @@
+"""Lifecycle decorator entry points."""
+

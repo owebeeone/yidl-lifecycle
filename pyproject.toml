@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "yidl-lifecycle"
+version = "0.1.0"
+description = "Transactional lifecycle decorator compiler built on YIDL"
+requires-python = ">=3.12"
+dependencies = ["yidl>=0.1.0"]
+authors = [{ name = "YIDL contributors" }]
+keywords = ["dsl", "compiler", "decorator", "lifecycle", "transactions"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+
+[project.optional-dependencies]
+dev = ["black==26.3.1", "pytest>=7.0"]
+
+[tool.uv]
+exclude-newer = "1 week"
+
+[tool.uv.sources]
+yidl = { path = "../yidl", editable = true }
+
+[tool.hatch.build]
+sources = ["src"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/yidl_lifecycle", "tests", "dev-docs"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+testpaths = ["tests"]
+
+[tool.yidl.test-matrix]
+python = ["3.12", "3.13", "3.14"]
+
