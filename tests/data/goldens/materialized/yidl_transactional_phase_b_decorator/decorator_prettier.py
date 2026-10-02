@@ -6602,11 +6602,7 @@ def run_build_default_factory_facts(builder):
         ]
         by_name = {field.field_name: field for field in class_fields}
         by_id = {field.field_id: field for field in class_fields}
-        factory_fields = [
-            field
-            for field in class_fields
-            if field.has_default_factory and field.field_kind != "local_store"
-        ]
+        factory_fields = [field for field in class_fields if field.has_default_factory]
         factory_fields.sort(
             key=lambda field: (1 if field.allow_self_factory else 0, field.field_order)
         )
@@ -8593,7 +8589,7 @@ for lifecycle_class in classes:
     by_id = {field.field_id: field for field in class_fields}
     factory_fields = [
         field for field in class_fields
-        if field.has_default_factory and field.field_kind != "local_store"
+        if field.has_default_factory
     ]
     factory_fields.sort(
         key=lambda field: (
@@ -9938,21 +9934,11 @@ astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = astich
             line_number=17,
         )
     ),
-    "LocalStoreDefaultFactoryAssignment": astichi_template(
-        from_astichi_code(
-            """\
-astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = (
-    default_factory_name__astichi_arg__()
-)""",
-            file_name="src/yidl_lifecycle/yidl/lifecycle_local_store.yidl",
-            line_number=24,
-        )
-    ),
     "LocalStoreNoneAssignment": astichi_template(
         from_astichi_code(
             "astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = None",
             file_name="src/yidl_lifecycle/yidl/lifecycle_local_store.yidl",
-            line_number=30,
+            line_number=24,
         )
     ),
 }
@@ -15538,37 +15524,6 @@ ASSEMBLY_CONTRIBUTIONS = {
             ),
         ),
     ),
-    "LocalStoreDefaultFactoryInitAssignment": ContributionSpec(
-        name="LocalStoreDefaultFactoryInitAssignment",
-        source_name="LocalStoreDefaultFactoryAssignment",
-        source_kind="resource",
-        build_name="LocalStoreInitAssignment",
-        index=ValueRef("FieldOrder"),
-        order=ValueRef("FieldOrder"),
-        target=TargetSpec(
-            name="state_init_body",
-            paths=(
-                TargetPathSpec(
-                    kind="build",
-                    path=PathSpec(
-                        segments=(
-                            PathSegmentSpec(kind="name", name="ClassDef", indexes=()),
-                        )
-                    ),
-                ),
-            ),
-        ),
-        bindings=(
-            BindingSpec(
-                kind="external", name="state_slot", value=ValueRef("ValueSlotName")
-            ),
-            BindingSpec(
-                kind="ident",
-                name="default_factory_name",
-                value=ValueRef("DefaultFactoryParamName"),
-            ),
-        ),
-    ),
     "LocalStoreNoneInitAssignment": ContributionSpec(
         name="LocalStoreNoneInitAssignment",
         source_name="LocalStoreNoneAssignment",
@@ -16751,6 +16706,14 @@ ASSEMBLY_MATCHERS = {
                             left=ValueRef("EvalInit"), right=LiteralValueRef(False)
                         ),
                     )
+                ),
+                contribution_name="StoredDefaultFactoryEvalNoInitContribution",
+                weight=1.0,
+            ),
+            ContributionRuleSpec(
+                name="local_store_no_init",
+                condition=EqConditionSpec(
+                    left=ValueRef("EvalFieldKind"), right=LiteralValueRef("local_store")
                 ),
                 contribution_name="StoredDefaultFactoryEvalNoInitContribution",
                 weight=1.0,
@@ -18371,14 +18334,22 @@ ASSEMBLY_MATCHERS = {
                 name="field", collection_name="LocalStoreFields", collection=None
             ),
         ),
-        default_contribution_name="LocalStoreNoneInitAssignment",
+        default_contribution_name=None,
         rules=(
             ContributionRuleSpec(
-                name="default_factory",
-                condition=EqConditionSpec(
-                    left=ValueRef("HasDefaultFactory"), right=LiteralValueRef(True)
+                name="no_value",
+                condition=AndConditionSpec(
+                    items=(
+                        EqConditionSpec(
+                            left=ValueRef("HasDefault"), right=LiteralValueRef(False)
+                        ),
+                        EqConditionSpec(
+                            left=ValueRef("HasDefaultFactory"),
+                            right=LiteralValueRef(False),
+                        ),
+                    )
                 ),
-                contribution_name="LocalStoreDefaultFactoryInitAssignment",
+                contribution_name="LocalStoreNoneInitAssignment",
                 weight=1.0,
             ),
             ContributionRuleSpec(

@@ -1,6 +1,4 @@
 from __future__ import annotations
-from collections.abc import Mapping
-from yidl_lifecycle.bindings import BindingBase, BindingDict
 import weakref
 from yidl_lifecycle.lifecycle import _HAS_DEFAULT_FACTORY
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
@@ -21,6 +19,8 @@ def build_lifecycle_class(
     _B_v1_default,
     _B_v2_default,
 ):
+    from collections.abc import Mapping
+    from yidl_lifecycle.bindings import BindingBase, BindingDict
 
     def _y_validate_binding_value(field_name, value):
         if value is not None and (not isinstance(value, BindingBase)):

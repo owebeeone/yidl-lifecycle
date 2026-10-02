@@ -1,6 +1,4 @@
 from __future__ import annotations
-from collections.abc import Mapping
-from yidl_lifecycle.bindings import BindingBase, BindingDict
 import weakref
 from yidl_lifecycle.lifecycle import _HAS_DEFAULT_FACTORY
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
@@ -8,6 +6,8 @@ from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
 def build_lifecycle_class(decorated_cls, *, _Scratch_lifecycle_definition, _Scratch_annotations, _Scratch_tx_keys, _Scratch_seed_default, _Scratch_label_default, _Scratch_marker_default, _Scratch_items_default_factory, _Scratch_buffer_default, _Scratch_buffer_working_default_factory, _Scratch_audit_buffer_default, _Scratch_audit_buffer_working_default_factory):
+    from collections.abc import Mapping
+    from yidl_lifecycle.bindings import BindingBase, BindingDict
 
     def _y_validate_binding_value(field_name, value):
         if value is not None and (not isinstance(value, BindingBase)):

@@ -18,8 +18,6 @@ def _increment_factory_for(param_name: str):
 LIFECYCLE_PERF_CLASSES: dict[int, type[object]] = {}
 
 # ---- 5 fields per group (15 total fields) ----
-from collections.abc import Mapping
-from yidl_lifecycle.bindings import BindingBase, BindingDict
 import weakref
 from yidl_lifecycle.lifecycle import _HAS_DEFAULT_FACTORY
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
@@ -27,6 +25,8 @@ from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
 def build_lifecycle_class(decorated_cls, *, _PerfLifecycle5_lifecycle_definition, _PerfLifecycle5_annotations, _PerfLifecycle5_tx_keys, _PerfLifecycle5_plain_0_default, _PerfLifecycle5_plain_1_default, _PerfLifecycle5_plain_2_default, _PerfLifecycle5_plain_3_default, _PerfLifecycle5_plain_4_default, _PerfLifecycle5_count_0_default, _PerfLifecycle5_count_1_default, _PerfLifecycle5_count_2_default, _PerfLifecycle5_count_3_default, _PerfLifecycle5_count_4_default, _PerfLifecycle5_derived_0_default_factory, _PerfLifecycle5_derived_1_default_factory, _PerfLifecycle5_derived_2_default_factory, _PerfLifecycle5_derived_3_default_factory, _PerfLifecycle5_derived_4_default_factory):
+    from collections.abc import Mapping
+    from yidl_lifecycle.bindings import BindingBase, BindingDict
 
     def _y_validate_binding_value(field_name, value):
         if value is not None and (not isinstance(value, BindingBase)):
@@ -1028,8 +1028,6 @@ PerfLifecycle5 = build_lifecycle_class(
 LIFECYCLE_PERF_CLASSES[5] = PerfLifecycle5
 
 # ---- 10 fields per group (30 total fields) ----
-from collections.abc import Mapping
-from yidl_lifecycle.bindings import BindingBase, BindingDict
 import weakref
 from yidl_lifecycle.lifecycle import _HAS_DEFAULT_FACTORY
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
@@ -1037,6 +1035,8 @@ from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
 def build_lifecycle_class(decorated_cls, *, _PerfLifecycle10_lifecycle_definition, _PerfLifecycle10_annotations, _PerfLifecycle10_tx_keys, _PerfLifecycle10_plain_0_default, _PerfLifecycle10_plain_1_default, _PerfLifecycle10_plain_2_default, _PerfLifecycle10_plain_3_default, _PerfLifecycle10_plain_4_default, _PerfLifecycle10_plain_5_default, _PerfLifecycle10_plain_6_default, _PerfLifecycle10_plain_7_default, _PerfLifecycle10_plain_8_default, _PerfLifecycle10_plain_9_default, _PerfLifecycle10_count_0_default, _PerfLifecycle10_count_1_default, _PerfLifecycle10_count_2_default, _PerfLifecycle10_count_3_default, _PerfLifecycle10_count_4_default, _PerfLifecycle10_count_5_default, _PerfLifecycle10_count_6_default, _PerfLifecycle10_count_7_default, _PerfLifecycle10_count_8_default, _PerfLifecycle10_count_9_default, _PerfLifecycle10_derived_0_default_factory, _PerfLifecycle10_derived_1_default_factory, _PerfLifecycle10_derived_2_default_factory, _PerfLifecycle10_derived_3_default_factory, _PerfLifecycle10_derived_4_default_factory, _PerfLifecycle10_derived_5_default_factory, _PerfLifecycle10_derived_6_default_factory, _PerfLifecycle10_derived_7_default_factory, _PerfLifecycle10_derived_8_default_factory, _PerfLifecycle10_derived_9_default_factory):
+    from collections.abc import Mapping
+    from yidl_lifecycle.bindings import BindingBase, BindingDict
 
     def _y_validate_binding_value(field_name, value):
         if value is not None and (not isinstance(value, BindingBase)):
@@ -2743,8 +2743,6 @@ PerfLifecycle10 = build_lifecycle_class(
 LIFECYCLE_PERF_CLASSES[10] = PerfLifecycle10
 
 # ---- 15 fields per group (45 total fields) ----
-from collections.abc import Mapping
-from yidl_lifecycle.bindings import BindingBase, BindingDict
 import weakref
 from yidl_lifecycle.lifecycle import _HAS_DEFAULT_FACTORY
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
@@ -2752,6 +2750,8 @@ from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
 def build_lifecycle_class(decorated_cls, *, _PerfLifecycle15_lifecycle_definition, _PerfLifecycle15_annotations, _PerfLifecycle15_tx_keys, _PerfLifecycle15_plain_0_default, _PerfLifecycle15_plain_1_default, _PerfLifecycle15_plain_2_default, _PerfLifecycle15_plain_3_default, _PerfLifecycle15_plain_4_default, _PerfLifecycle15_plain_5_default, _PerfLifecycle15_plain_6_default, _PerfLifecycle15_plain_7_default, _PerfLifecycle15_plain_8_default, _PerfLifecycle15_plain_9_default, _PerfLifecycle15_plain_10_default, _PerfLifecycle15_plain_11_default, _PerfLifecycle15_plain_12_default, _PerfLifecycle15_plain_13_default, _PerfLifecycle15_plain_14_default, _PerfLifecycle15_count_0_default, _PerfLifecycle15_count_1_default, _PerfLifecycle15_count_2_default, _PerfLifecycle15_count_3_default, _PerfLifecycle15_count_4_default, _PerfLifecycle15_count_5_default, _PerfLifecycle15_count_6_default, _PerfLifecycle15_count_7_default, _PerfLifecycle15_count_8_default, _PerfLifecycle15_count_9_default, _PerfLifecycle15_count_10_default, _PerfLifecycle15_count_11_default, _PerfLifecycle15_count_12_default, _PerfLifecycle15_count_13_default, _PerfLifecycle15_count_14_default, _PerfLifecycle15_derived_0_default_factory, _PerfLifecycle15_derived_1_default_factory, _PerfLifecycle15_derived_2_default_factory, _PerfLifecycle15_derived_3_default_factory, _PerfLifecycle15_derived_4_default_factory, _PerfLifecycle15_derived_5_default_factory, _PerfLifecycle15_derived_6_default_factory, _PerfLifecycle15_derived_7_default_factory, _PerfLifecycle15_derived_8_default_factory, _PerfLifecycle15_derived_9_default_factory, _PerfLifecycle15_derived_10_default_factory, _PerfLifecycle15_derived_11_default_factory, _PerfLifecycle15_derived_12_default_factory, _PerfLifecycle15_derived_13_default_factory, _PerfLifecycle15_derived_14_default_factory):
+    from collections.abc import Mapping
+    from yidl_lifecycle.bindings import BindingBase, BindingDict
 
     def _y_validate_binding_value(field_name, value):
         if value is not None and (not isinstance(value, BindingBase)):

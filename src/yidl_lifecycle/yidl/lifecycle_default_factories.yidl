@@ -106,7 +106,7 @@ concept LifecycleDefaultFactories extends managed.LifecycleManaged {
             by_id = {field.field_id: field for field in class_fields}
             factory_fields = [
                 field for field in class_fields
-                if field.has_default_factory and field.field_kind != "local_store"
+                if field.has_default_factory
             ]
             factory_fields.sort(
                 key=lambda field: (
@@ -675,6 +675,8 @@ concept LifecycleDefaultFactories extends managed.LifecycleManaged {
         rule managed_no_init when EvalFieldKind == "managed"
                              and EvalInit == False
                              -> StoredDefaultFactoryEvalNoInitContribution
+        rule local_store_no_init when EvalFieldKind == "local_store"
+                                 -> StoredDefaultFactoryEvalNoInitContribution
         rule initvar_init when EvalFieldKind == "initvar"
                           and EvalInit == True
                           -> InitVarDefaultFactoryEvalInitContribution

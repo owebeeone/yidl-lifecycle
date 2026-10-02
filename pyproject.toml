@@ -19,6 +19,9 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 
+[project.scripts]
+yidl-lifecycle-regenerate-base = "yidl_lifecycle.regenerate_lifecycle_base:main"
+
 [project.optional-dependencies]
 dev = ["black==26.3.1", "pytest>=7.0"]
 

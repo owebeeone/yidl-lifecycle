@@ -20,12 +20,6 @@ concept LifecycleLocalStore extends const_static.LifecycleConstStatic {
         )
     ]$
 
-    resource LocalStoreDefaultFactoryAssignment = template $[
-        astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = (
-            default_factory_name__astichi_arg__()
-        )
-    ]$
-
     resource LocalStoreNoneAssignment = template $[
         astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = None
     ]$
@@ -53,19 +47,6 @@ concept LifecycleLocalStore extends const_static.LifecycleConstStatic {
 
         external state_slot = ValueSlotName
         ident default_value_name = DefaultValueParamName
-    }
-
-    contribution LocalStoreDefaultFactoryInitAssignment = LocalStoreDefaultFactoryAssignment {
-        as LocalStoreInitAssignment
-        index FieldOrder
-        order FieldOrder
-
-        target state_init_body {
-            build /ClassDef
-        }
-
-        external state_slot = ValueSlotName
-        ident default_factory_name = DefaultFactoryParamName
     }
 
     contribution LocalStoreNoneInitAssignment = LocalStoreNoneAssignment {
@@ -100,9 +81,9 @@ concept LifecycleLocalStore extends const_static.LifecycleConstStatic {
     }
 
     matcher LocalStoreInitAssignmentContributions(field: LocalStoreFields) -> contribution {
-        default -> LocalStoreNoneInitAssignment
-        rule default_factory when HasDefaultFactory == True
-                             -> LocalStoreDefaultFactoryInitAssignment
+        rule no_value when HasDefault == False
+                      and HasDefaultFactory == False
+                      -> LocalStoreNoneInitAssignment
         rule default_value when HasDefault == True
                            -> LocalStoreDefaultInitAssignment
     }

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import dataclasses
 import os
 from pathlib import Path
@@ -312,17 +313,21 @@ def test_lifecycle_decorator_transient_working_overlay_materializes_in_transacti
 
 
 def test_lifecycle_decorator_local_store_is_shared_non_transactional() -> None:
+    def make_cache(count: int) -> dict[str, int]:
+        return {"seed": count}
+
     class Scratch:
-        cache: dict[str, int] = local_store(default_factory=dict)
         count: int = managed(default=1)
+        cache: dict[str, int] = local_store(default_factory=make_cache)
 
     generated = lifecycle(Scratch)
     item = generated()
 
     assert item.cache is item.current.cache
     assert item.cache is item.working.cache
+    assert item.cache == {"seed": 1}
     item.cache["a"] = 1
-    assert item.current.cache == {"a": 1}
+    assert item.current.cache == {"seed": 1, "a": 1}
     assert item._y_state._y_working_tx_ids[0] is None
 
     with item.begin(DEFAULT_TRANSACTION):
@@ -330,7 +335,7 @@ def test_lifecycle_decorator_local_store_is_shared_non_transactional() -> None:
         assert item._y_state._y_working_tx_ids[0] is None
         item.count = 5
 
-    assert item.cache == {"a": 1, "b": 2}
+    assert item.cache == {"seed": 1, "a": 1, "b": 2}
     assert item.count == 5
 
     with pytest.raises(RuntimeError):
@@ -339,7 +344,7 @@ def test_lifecycle_decorator_local_store_is_shared_non_transactional() -> None:
             item.count = 7
             raise RuntimeError("rollback")
 
-    assert item.cache == {"a": 1, "b": 2, "c": 3}
+    assert item.cache == {"seed": 1, "a": 1, "b": 2, "c": 3}
     assert item.count == 5
 
 
@@ -1039,6 +1044,7 @@ def test_lifecycle_decorator_after_rollback_failure_keeps_rollback() -> None:
     assert events == [("rollback", 1)]
 
 
+# Opt-in perf probe only — keep disabled in default pytest/CI (no YIDL_PERF_TESTS).
 @pytest.mark.skipif(
     os.environ.get("YIDL_PERF_TESTS") != "1",
     reason="set YIDL_PERF_TESTS=1 to run constructor throughput comparison",
@@ -1137,7 +1143,7 @@ def _measure_constructor_throughput(
         next_batch = [cls() for _ in range(next_count)]
         total_created += len(next_batch)
         live_batch = next_batch
-    live_batch = []
+    live_batch.clear()
     elapsed = perf_counter() - start
     objects_per_second = total_created / elapsed if elapsed else float("inf")
     return total_created, elapsed, objects_per_second
@@ -1147,16 +1153,16 @@ def test_lifecycle_wraps_generation_failure_with_class_context(monkeypatch) -> N
     class Counter:
         value: int = field(default=1)
 
-    def fail_generate(_harvested: object) -> str:
+    def fail_generate(_harvested: object) -> ast.Module:
         raise ValueError("boom")
 
     monkeypatch.setattr(
-        "yidl_lifecycle.lifecycle._generate_lifecycle_source", fail_generate
+        "yidl_lifecycle.lifecycle._generate_lifecycle_ast", fail_generate
     )
 
     with pytest.raises(
         LifecycleDefinitionError,
-        match="Counter: lifecycle source generation failed: boom",
+        match="Counter: lifecycle AST generation failed: boom",
     ):
         lifecycle(Counter)
 
@@ -1165,14 +1171,29 @@ def test_lifecycle_wraps_exec_failure_with_class_context(monkeypatch) -> None:
     class Counter:
         value: int = field(default=1)
 
+    def fail_execution(_harvested: object) -> ast.Module:
+        return ast.fix_missing_locations(
+            ast.Module(
+                body=[
+                    ast.Expr(
+                        value=ast.Name(
+                            id="_missing_lifecycle_execution_name",
+                            ctx=ast.Load(),
+                        ),
+                    ),
+                ],
+                type_ignores=[],
+            ),
+        )
+
     monkeypatch.setattr(
-        "yidl_lifecycle.lifecycle._generate_lifecycle_source",
-        lambda _harvested: "not valid python",
+        "yidl_lifecycle.lifecycle._generate_lifecycle_ast",
+        fail_execution,
     )
 
     with pytest.raises(
         LifecycleDefinitionError,
-        match="Counter: lifecycle source execution failed:",
+        match="Counter: lifecycle AST execution failed:",
     ):
         lifecycle(Counter)
 
@@ -1182,10 +1203,10 @@ def test_lifecycle_wraps_build_failure_with_class_context(monkeypatch) -> None:
         value: int = field(default=1)
 
     monkeypatch.setattr(
-        "yidl_lifecycle.lifecycle._generate_lifecycle_source",
-        lambda _harvested: (
+        "yidl_lifecycle.lifecycle._generate_lifecycle_ast",
+        lambda _harvested: ast.parse(
             "def build_lifecycle_class(decorated_cls, **kwargs):\n"
-            "    raise RuntimeError('boom')\n"
+            "    raise RuntimeError('boom')\n",
         ),
     )
 

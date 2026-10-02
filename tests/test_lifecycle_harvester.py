@@ -248,18 +248,19 @@ def test_harvester_collects_local_store_field() -> None:
     assert harvested.build_kwargs["_Scratch_token_default"] == "ready"
 
 
-def test_harvester_rejects_local_store_default_factory_parameters() -> None:
+def test_harvester_collects_local_store_default_factory_parameters() -> None:
     def make_cache(seed: int) -> dict[str, int]:
         return {"seed": seed}
 
     class Scratch:
+        seed: int = field(default=3)
         cache: dict[str, int] = local_store(default_factory=make_cache)
 
-    with pytest.raises(
-        LifecycleDefinitionError,
-        match="Scratch.cache: local_store default_factory must be zero-argument",
-    ):
-        harvest_lifecycle_definition(Scratch)
+    harvested = harvest_lifecycle_definition(Scratch)
+
+    cache_fact = harvested.field_facts[1]
+    assert cache_fact["field_kind"] == "local_store"
+    assert cache_fact["default_factory_param_names"] == ("seed",)
 
 
 def test_local_store_marker_rejects_transaction_options() -> None:

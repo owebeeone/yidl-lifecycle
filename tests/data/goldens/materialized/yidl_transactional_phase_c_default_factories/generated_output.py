@@ -1,6 +1,4 @@
 from __future__ import annotations
-from collections.abc import Mapping
-from yidl_lifecycle.bindings import BindingBase, BindingDict
 import weakref
 from yidl_lifecycle.lifecycle import _HAS_DEFAULT_FACTORY
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
@@ -8,6 +6,8 @@ from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
 def build_lifecycle_class(decorated_cls, *, _Example_lifecycle_definition, _Example_annotations, _Example_tx_keys, _Example_SCALE_default, _Example_owner_default, _Example_owner_tag_default_factory, _Example_seed_default, _Example_class_name_size_default_factory, _Example_self_tag_size_default_factory, _Example_temp_default_factory, _Example_v2_default_factory, _Example_v3_default_factory, _Example_v4_default_factory, _Example_v5_default_factory):
+    from collections.abc import Mapping
+    from yidl_lifecycle.bindings import BindingBase, BindingDict
 
     def _y_validate_binding_value(field_name, value):
         if value is not None and (not isinstance(value, BindingBase)):

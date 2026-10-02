@@ -48,8 +48,11 @@ def validate_case(sources: Mapping[str, str]) -> None:
 
 
 def _fixture_class() -> type[object]:
+    def make_cache(count: int) -> dict[str, int]:
+        return {"seed": count}
+
     class Scratch:
-        cache: dict[str, int] = local_store(default_factory=dict)
+        cache: dict[str, int] = local_store(default_factory=make_cache)
         marker: list[str] = local_store(default=["ready"])
         count: int = managed(default=1)
 
@@ -92,10 +95,11 @@ def _assert_scratch_class(
     assert scratch.working.manager() is expected_manager
     assert scratch.cache is scratch.current.cache
     assert scratch.cache is scratch.working.cache
+    assert scratch.cache == {"seed": 1}
     assert scratch.marker == ["ready"]
 
     scratch.cache["a"] = 1
-    assert scratch.current.cache == {"a": 1}
+    assert scratch.current.cache == {"seed": 1, "a": 1}
     assert scratch._y_state._y_working_tx_ids[0] is None
 
     with scratch.begin(DEFAULT_TRANSACTION):
@@ -103,7 +107,7 @@ def _assert_scratch_class(
         assert scratch._y_state._y_working_tx_ids[0] is None
         scratch.count = 5
 
-    assert scratch.cache == {"a": 1, "b": 2}
+    assert scratch.cache == {"seed": 1, "a": 1, "b": 2}
     assert scratch.count == 5
 
     try:
@@ -114,7 +118,7 @@ def _assert_scratch_class(
     except RuntimeError:
         pass
 
-    assert scratch.cache == {"a": 1, "b": 2, "c": 3}
+    assert scratch.cache == {"seed": 1, "a": 1, "b": 2, "c": 3}
     assert scratch.count == 5
 
 
@@ -124,7 +128,7 @@ def _assert_source_shape(sources: Mapping[str, str]) -> None:
     assert "_y_cache_current" not in source
     assert "_y_cache_working" not in source
     assert "_y_cache_staged" not in source
-    assert "_Scratch_cache_default_factory()" in source
+    assert "_Scratch_cache_default_factory(count=self.count)" in source
     assert "def _y_get_transaction_manager(self):" in source
 
 

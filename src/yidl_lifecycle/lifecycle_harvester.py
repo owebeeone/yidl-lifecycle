@@ -133,14 +133,6 @@ def harvest_lifecycle_definition(cls: type[object]) -> HarvestedLifecycle:
     for fact in field_facts:
         if fact["field_kind"] in {"managed", "owned", "transient"}:
             tx_keys.add(fact["tx_key_key"])
-        if (
-            fact["field_kind"] == "local_store"
-            and fact["default_factory_param_names"]
-        ):
-            raise LifecycleDefinitionError(
-                f"{class_name}.{fact['field_name']}: local_store "
-                "default_factory must be zero-argument",
-            )
         if fact["has_default"]:
             build_kwargs[str(fact["default_value_param_name"])] = fact["default_value"]
         if fact["has_default_factory"]:

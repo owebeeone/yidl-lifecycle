@@ -1,6 +1,4 @@
 from __future__ import annotations
-from collections.abc import Mapping
-from yidl_lifecycle.bindings import BindingBase, BindingDict
 import weakref
 from yidl_lifecycle.lifecycle import _HAS_DEFAULT_FACTORY
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
@@ -8,6 +6,8 @@ from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
 def build_lifecycle_class(decorated_cls, *, _Scratch_lifecycle_definition, _Scratch_annotations, _Scratch_tx_keys, _Scratch_cache_default_factory, _Scratch_marker_default, _Scratch_count_default):
+    from collections.abc import Mapping
+    from yidl_lifecycle.bindings import BindingBase, BindingDict
 
     def _y_validate_binding_value(field_name, value):
         if value is not None and (not isinstance(value, BindingBase)):
@@ -319,11 +319,12 @@ def build_lifecycle_class(decorated_cls, *, _Scratch_lifecycle_definition, _Scra
             state._y_default_ref = weakref.ref(self)
             state._y_current_ref = None
             state._y_working_ref = None
-            state._y_cache_value = _Scratch_cache_default_factory()
             state._y_marker_value = _Scratch_marker_default
             state._y_count_current = count
             state._y_count_working = VOID
             state._y_count_staged = VOID
+            cache = _Scratch_cache_default_factory(count=self.count)
+            state._y_cache_value = cache
             state._y_working_tx_ids = [None for _group in _Scratch_tx_keys]
 
     class Scratch_Current(Scratch_FacadeBase):

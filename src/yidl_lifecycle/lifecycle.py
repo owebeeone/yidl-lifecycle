@@ -38,14 +38,20 @@ def lifecycle(cls: type[object]) -> type[object]:
         raise TypeError("@lifecycle can only decorate classes")
     harvested = harvest_lifecycle_definition(cls)
     try:
-        source = _generate_lifecycle_source(harvested)
+        module_ast = _generate_lifecycle_ast(harvested)
     except Exception as exc:
-        _raise_lifecycle_step_error(cls, "source generation", exc)
+        _raise_lifecycle_step_error(cls, "AST generation", exc)
     namespace: dict[str, object] = {"__name__": cls.__module__}
     try:
-        exec(source, namespace)
+        code = compile(
+            module_ast,
+            f"<yidl_lifecycle.{cls.__module__}.{cls.__qualname__}>",
+            "exec",
+            dont_inherit=True,
+        )
+        exec(code, namespace)
     except Exception as exc:
-        _raise_lifecycle_step_error(cls, "source execution", exc)
+        _raise_lifecycle_step_error(cls, "AST execution", exc)
     try:
         generated = namespace["build_lifecycle_class"](
             cls,
@@ -58,14 +64,20 @@ def lifecycle(cls: type[object]) -> type[object]:
     return generated
 
 
+def _generate_lifecycle_ast(harvested: HarvestedLifecycle) -> ast.Module:
+    return _build_lifecycle_composable(harvested).to_executable_ast()
+
+
 def _generate_lifecycle_source(harvested: HarvestedLifecycle) -> str:
-    generated = _generated_lifecycle_base_module()
-    source = generated.build_LifecycleModule(
-        _build_lifecycle_container(generated, harvested),
-    ).emit_commented()
-    # TODO: Emit/import the generated lifecycle class as a Python module instead
-    # of executing generated source directly at decorator time.
+    source = _build_lifecycle_composable(harvested).emit_commented()
     return _strip_redundant_pass_statements(source)
+
+
+def _build_lifecycle_composable(harvested: HarvestedLifecycle):
+    generated = _generated_lifecycle_base_module()
+    return generated.build_LifecycleModule(
+        _build_lifecycle_container(generated, harvested),
+    )
 
 
 def _build_lifecycle_container(
