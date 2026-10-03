@@ -3,8 +3,10 @@
 Status: user-facing DRAFT, 2026-10-03. Existing API is shown first. Proposed
 constructor aliases and static changes at the end are not implemented yet.
 
-Pyrolyze calls the decorator `managed_context`. The library calls it
-`lifecycle`; they are the same decorator, not two implementations.
+Pyrolyze's LCM runtime locally aliases the library's `lifecycle` decorator as
+`managed_context`. The older `pyrolyze.lifecycle.managed_context` is a separate
+legacy implementation with different marker objects; it is not interchangeable
+with the imports used on this page.
 
 ## Edit And Complete A Transaction
 
@@ -48,11 +50,35 @@ key is `DEFAULT_TRANSACTION`; `managed(other_key, ...)` chooses another key.
 A manager supplied to an object must know that key. Only enlisted participants
 are completed; sharing a manager does not make plain fields transactional.
 
+For a custom key, configure the manager explicitly:
+
+```python
+EDITS = "edits"
+
+
+@lifecycle
+class CustomCounter:
+    count: int = managed(EDITS, default=0)
+
+
+edit_manager = TransactionManager(tx_keys=(EDITS,))
+custom = CustomCounter(transaction_manager=edit_manager)
+with edit_manager.begin(EDITS):
+    custom.count = 1
+assert custom.current.count == 1
+```
+
 The manager owns completion. Calling `counter.commit(key)` delegates to that
 manager and can complete other objects enlisted under that key. Prefer
 manager-owned scopes when objects share a manager. Omitting keys selects the
 default key and all configured keys; specify keys to keep the boundary explicit.
 Multiple keys complete independently, not atomically as a group.
+
+Outermost `commit` and normal outermost scope exit validate before publication.
+`commit_only` is an advanced operation that **bypasses validators** and can
+publish a rejected value. Its completion owner assumes validation
+responsibility; a prior `validate` does not certify edits made afterward.
+Use `commit` or an ordinary manager scope for normal completion.
 
 Nested scopes on the same key join one transaction, not savepoints. An inner
 abort aborts that key's joined transaction; do not catch it and expect the
@@ -89,9 +115,10 @@ with manager.begin(DEFAULT_TRANSACTION):
 assert numbers.current.items == (3,)
 ```
 
-Working access in an active transaction creates the editable representation.
-Outside a transaction it returns the committed representation. Default-facade
-reads do not initiate thawing. For aggregates, use `.working` to request the
+For healthy state with no stale overlay, working access in an active transaction
+creates the editable representation; outside it, access returns committed
+representation. Default-facade reads do not initiate thawing. For aggregates,
+use `.working` to request the
 editable view and supply conversions that separate mutable data sufficiently.
 Tuple/list conversion is shallow, not deep-copy isolation. Do not retain and
 reuse mutable working references across transaction boundaries.
@@ -101,6 +128,19 @@ publication cannot undo committed values. The current implementation has
 multi-participant cleanup/hook failure limitations; do not rely on every
 participant being cleaned up after an exceptional completion. Those limitations
 are separate from the ordinary edit/commit/abort contract shown above.
+
+Interrupted cleanup can leave stale working values visible even after the
+manager becomes inactive. Starting another transaction does not repair them:
+getters can return the stale value without enlistment, and assignment can
+reject the old token. Dropping previously returned lists is not sufficient.
+Stop reusing the affected state cohort until cleanup or supported recovery is
+verified; this API currently provides no general guaranteed-recovery command.
+
+`owned` adds another boundary: candidate resources are accepted during prepare,
+before their references become current. A later prepare failure can leave a
+candidate accepted while its current reference remains unchanged. A map can be
+partially accepted. Rollback of the reference does not undo those resource
+effects; a failed commit is not proof that candidates were never accepted.
 
 ## Initialization Lifetimes
 
@@ -121,8 +161,11 @@ _slot_id: object = const(init_name="slot_id", default=None)
 
 The proposed constructor accepts `slot_id`; the property remains `_slot_id`.
 This creates no `slot_id` property or factory provider. `init_name` defaults
-to the declared field name for new fields, inherits on overrides, and requires
-`init=True`. Duplicate constructor names and inherited renaming are rejected.
+to the declared field name for new fields and inherits on overrides. `const`
+defaults to `init=True`, so the example satisfies the prerequisite. An explicit
+non-`None` alias requires `init=True`; `init=False` with the default `init_name=None`
+still creates no constructor parameter. Duplicate constructor names and
+inherited renaming are rejected.
 Existing markers currently reject this new option; use the existing initvar
 and copying-factory pattern until it is implemented.
 

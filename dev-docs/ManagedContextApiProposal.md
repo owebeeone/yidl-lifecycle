@@ -9,9 +9,11 @@ The user requested a reviewable proposal before further LCM migration work.
 The primary mental model is **transaction-scoped editing of managed state**,
 not switching an entire Python object between frozen and mutable classes.
 
-In this checkout, Pyrolyze's `managed_context` is an alias for
-`yidl_lifecycle.lifecycle.lifecycle`. This proposal introduces no second
-decorator, no `ManagedContext` base class, and no decorator rename.
+Pyrolyze's LCM adapter locally aliases `yidl_lifecycle.lifecycle.lifecycle` as
+`managed_context`. The separate legacy `pyrolyze.lifecycle.managed_context`
+still exists and does not accept the same marker objects. Only the LCM alias
+is equivalent to the library decorator. This proposal introduces no second
+YIDL decorator, no `ManagedContext` base class, and no decorator rename.
 
 Review the document and `docs/ManagedContextApiDraft.md` together. The latter
 is a user-facing draft, with proposed-only syntax labeled separately from
@@ -66,8 +68,10 @@ For `managed` and the transactional reference stored by `owned`:
    that field's `tx_key`, including assignments later elided by comparison.
 2. Assignment records a pending replacement; it does not overwrite committed
    current state immediately.
-3. Normal completion validates, prepares converted values, and applies the
-   prepared values. Aborting clears pending/staged values at that boundary.
+3. Outermost ordinary `commit` and successful outermost scope exit validate,
+   prepare converted values, and apply prepared values. In healthy completion,
+   aborting clears pending/staged values at that boundary; the failure limits
+   below qualify that statement.
 4. After completion, further assignment again requires an active transaction.
 
 This describes assignment through generated accessors. It does not intercept
@@ -87,6 +91,13 @@ not participant-selective operations. A shared manager/key can complete other
 enlisted objects. Passing a manager does not transfer completion ownership to
 every object using it.
 
+`commit_only` deliberately bypasses validators and can publish values a
+validator would reject. Its completion owner must assume validation
+responsibility; it is not the ordinary application completion API. A prior
+`validate` does not certify subsequent edits. Prefer `commit` or an ordinary
+manager scope for normal completion. Nested completion that only reduces depth
+does not validate or publish yet.
+
 Use an explicit key in examples. Today, omitting keys on manager or object
 operations selects the default key **and all configured non-default keys**.
 This proposal does not change that default. Multiple keys complete separately,
@@ -105,6 +116,15 @@ source baseline, participant apply, rollback, and after-hook loops can stop
 at the first exception. Some participants can consequently remain uncleared
 or unprocessed, even though manager bookkeeping is reset.
 
+That contaminated state can still expose its stale working overlay through
+default/working getters after the manager becomes inactive. Starting another
+transaction is not recovery: a getter can return that overlay without enlisting
+it, while assignment rejects its old token. Discarding previously returned
+references alone does not fix the participant. Require verified cleanup or
+supported domain recovery before reusing that state cohort; otherwise stop
+using and reconstruct it as appropriate to the application's ownership rules.
+No general public guaranteed-recovery operation is introduced here.
+
 This proposal does not assert that those gaps are fixed, that every exception
 undoes committed values, or that a successful child publication is provisional
 until its parent completes. The existing integration plan's L0/D4 gate owns
@@ -118,13 +138,18 @@ The documented model assumes serialized access to a manager/state cohort.
 
 ## A2: Facades Are Live Access Policies
 
+The following access behavior assumes successfully initialized, healthy state
+whose previous completion did not leave stale working values/tokens. The
+failure section above governs contaminated state; an inactive manager alone
+does not establish that these healthy-state preconditions hold.
+
 | Field category | Default facade | Current facade | Working facade |
 | --- | --- | --- | --- |
 | `managed` / `owned` reference | Pending replacement if present, otherwise committed; transaction-gated assignment | Committed value; assignment rejected | Pending replacement with committed fallback; transaction-gated assignment |
 | Managed field with thaw | Default overlay reads do not initiate thaw | Committed representation | In an active key, first editable access enlists and thaws; outside it, returns committed representation |
 | `field`, `binding`, `local_store` | Shared non-transactional storage | Same storage and assignment policy | Same storage and assignment policy |
 | `const` | Readable; replacement rejected | Same | Same |
-| `static` | Shared lazy storage; currently write-once, A5 proposes rewritable | Same | Same |
+| `static` | Shared lazy storage; currently write-once, replacement policy unresolved under A5 | Same | Same |
 | `transient` | Active-key access initializes/enlists transaction-local storage; inactive access returns its construction baseline | Construction baseline, never the transaction-local value | Same active/inactive behavior as default |
 | `initvar` | No public accessor; may be retained internally for later consumers | Same | Same |
 | `classvar` | Common class attribute | Same | Same |
@@ -170,6 +195,22 @@ conversion functions; annotations do not certify separation.
 Mutable working references must not be reused across transaction boundaries.
 Discarding a working slot does not revoke an already returned Python list.
 This proposal adds no revocable proxy or reference-tracking runtime.
+
+### Owned Acceptance Is A Separate Effect
+
+In the pinned implementation, transactional owned candidates receive
+`BindingBase.accepted()` during preparation, before reference publication.
+A later conversion/prepare failure can leave the current reference unchanged
+while a caller-held candidate remains accepted. Owned-map preparation can
+accept a prefix before a later item fails; reference rollback does not undo
+those acceptance effects.
+
+Consequently, preparation failure prevents the corresponding current-slot
+replacement, not all external/resource effects. Do not equate successful
+reference publication with the first acceptance event, assume a failed
+candidate was never accepted, or add lifetime/acceptance-timing redesign under
+this documentation proposal. That behavior needs a separately approved resource
+contract if consumers require stronger guarantees.
 
 Conversion failure during preparation is distinct from an exception after
 publication. Tests must keep those cases separate; the latter cannot promise
@@ -344,6 +385,11 @@ This is a bounded follow-up sequence, not an automatically authorized roll-build
    Preserve genuine initvar consumers, manager injection, concrete constructor
    failure isolation, raw-constructor detachment, and attachment order. Re-run
    the accepted I1b canonical fixture and focused integration gates.
+
+The document-review characterization commands and their limits are recorded in
+`dev-docs/ManagedContextApiProposal-Checks.md`. They exercise committed generated
+goldens, not a regenerated decorator, and do not close the L0/D4 implementation
+gate or certify that the live generation pipeline passes its smoke test.
 
 Use narrow tests for alias recognition, invalid names, resolved-name collisions,
 unsupported options, inheritance renaming, and missing dependency diagnostics.
