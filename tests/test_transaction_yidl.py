@@ -232,3 +232,128 @@ def test_multi_group_context_manager_commits_each_group() -> None:
 
     assert left.committed == [(1, GROUP_ALPHA)]
     assert right.committed == [(1, GROUP_BETA)]
+
+
+@pytest.mark.parametrize("keys", ((GROUP_ALPHA,), (GROUP_ALPHA, GROUP_BETA)))
+def test_old_scope_cannot_commit_replacement_transactions(keys: tuple[str, ...]) -> None:
+    manager = TransactionManager(tx_keys=keys)
+    old_scope = manager.begin(*keys)
+    manager.rollback(*keys)
+    replacements = {key: manager.begin(key) for key in keys}
+    context = FakeContext(name="new")
+    manager.enlist(context, keys[-1])
+
+    with pytest.raises((RuntimeError, ExceptionGroup)) as raised:
+        old_scope.__exit__(None, None, None)
+
+    errors = raised.value.exceptions if isinstance(raised.value, ExceptionGroup) else (raised.value,)
+    assert len(errors) == len(keys)
+    assert all("stale yidl transaction scope" in str(error) for error in errors)
+
+    assert context.committed == []
+    for key, transaction in replacements.items():
+        assert manager.active_transaction_for(key) is transaction
+    manager.rollback(*keys)
+
+
+@pytest.mark.parametrize("keys", ((GROUP_ALPHA,), (GROUP_ALPHA, GROUP_BETA)))
+def test_old_exceptional_scope_cannot_rollback_replacement_transactions(keys: tuple[str, ...]) -> None:
+    manager = TransactionManager(tx_keys=keys)
+    old_scope = manager.begin(*keys)
+    manager.rollback(*keys)
+    replacements = {key: manager.begin(key) for key in keys}
+    context = FakeContext(name="new")
+    manager.enlist(context, keys[-1])
+    failure = ValueError("original body failure")
+
+    assert old_scope.__exit__(ValueError, failure, None) is False
+
+    assert context.rolled_back == []
+    for key, transaction in replacements.items():
+        assert manager.active_transaction_for(key) is transaction
+    manager.rollback(*keys)
+
+
+def test_outer_scope_after_caught_nested_failure_cannot_publish_new_transaction() -> None:
+    manager = TransactionManager(tx_keys=(GROUP_ALPHA,))
+    context = FakeContext(name="new")
+    with pytest.raises(RuntimeError, match="stale yidl transaction scope"):
+        with manager.begin(GROUP_ALPHA):
+            try:
+                with manager.begin(GROUP_ALPHA):
+                    raise ValueError("nested failure")
+            except ValueError:
+                replacement = manager.begin(GROUP_ALPHA)
+                manager.enlist(context, GROUP_ALPHA)
+    assert manager.active_transaction_for(GROUP_ALPHA) is replacement
+    assert context.committed == []
+    manager.rollback(GROUP_ALPHA)
+
+
+def test_nested_exception_preserves_original_body_failure() -> None:
+    manager = TransactionManager(tx_keys=(GROUP_ALPHA,))
+    failure = ValueError("nested failure")
+    with pytest.raises(ValueError) as raised:
+        with manager.begin(GROUP_ALPHA):
+            with manager.begin(GROUP_ALPHA):
+                raise failure
+    assert raised.value is failure
+    assert manager.active_transaction_for(GROUP_ALPHA) is None
+
+
+def test_sole_owner_check_is_nonpublishing_and_rejects_extra_borrowers() -> None:
+    manager = TransactionManager(tx_keys=(GROUP_ALPHA, GROUP_BETA))
+    transaction = manager.begin(GROUP_ALPHA)
+    other = manager.begin(GROUP_BETA)
+    context = FakeContext(name="candidate")
+    manager.enlist(context, GROUP_ALPHA)
+    manager.require_sole_transaction_owner(transaction)
+    manager.begin(GROUP_ALPHA)
+
+    with pytest.raises(RuntimeError, match="external nested begin"):
+        manager.require_sole_transaction_owner(transaction)
+
+    assert context.validations == []
+    assert context.prepared == []
+    assert context.committed == []
+    assert manager.commit(GROUP_ALPHA) is None
+    manager.require_sole_transaction_owner(transaction)
+    assert manager.active_transaction_for(GROUP_BETA) is other
+    manager.rollback(GROUP_ALPHA, GROUP_BETA)
+
+
+def test_sole_owner_check_rejects_missing_or_replaced_token_without_mutation() -> None:
+    manager = TransactionManager(tx_keys=(GROUP_ALPHA,))
+    transaction = manager.begin(GROUP_ALPHA)
+    manager.rollback(GROUP_ALPHA)
+    with pytest.raises(RuntimeError, match="missing or replaced"):
+        manager.require_sole_transaction_owner(transaction)
+    replacement = manager.begin(GROUP_ALPHA)
+    with pytest.raises(RuntimeError, match="missing or replaced"):
+        manager.require_sole_transaction_owner(transaction)
+    assert manager.active_transaction_for(GROUP_ALPHA) is replacement
+    manager.rollback(GROUP_ALPHA)
+
+
+@pytest.mark.parametrize("completion", ("commit", "rollback"))
+def test_completion_callback_cannot_partially_begin_multiple_keys(completion: str) -> None:
+    manager = TransactionManager(tx_keys=(GROUP_ALPHA, GROUP_BETA))
+
+    class ReentrantContext(FakeContext):
+        def _after_completion(
+            self, tx_key: object = DEFAULT_TRANSACTION, tx_token: int | None = None
+        ) -> object:
+            del tx_key, tx_token
+            with pytest.raises(RuntimeError, match="completing"):
+                manager.begin(GROUP_BETA, GROUP_ALPHA)
+            return None
+
+        _after_commit_tx_by_key = _after_completion
+        _after_rollback_tx_by_key = _after_completion
+
+    manager.begin(GROUP_ALPHA)
+    manager.enlist(ReentrantContext(name="reentrant"), GROUP_ALPHA)
+    getattr(manager, completion)(GROUP_ALPHA)
+
+    assert manager.active_transaction_for(GROUP_ALPHA) is None
+    assert manager.active_transaction_for(GROUP_BETA) is None

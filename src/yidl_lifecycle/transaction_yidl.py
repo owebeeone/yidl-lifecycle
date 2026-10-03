@@ -176,6 +176,7 @@ class GroupTransactionManager:
     _next_tx_id: int = field(default=1, init=False, repr=False)
     active_transaction: LifecycleTransaction | None = field(default=None, init=False, repr=False)
     begin_count: int = field(default=0, init=False, repr=False)
+    _completing: bool = field(default=False, init=False, repr=False)
 
     def active_transaction_for(self, tx_key: Hashable = DEFAULT_TRANSACTION) -> LifecycleTransaction | None:
         if tx_key != self.tx_key:
@@ -185,6 +186,7 @@ class GroupTransactionManager:
     def begin(self, tx_key: Hashable = DEFAULT_TRANSACTION) -> LifecycleTransaction:
         if tx_key != self.tx_key:
             raise RuntimeError(f"unknown yidl transaction key {tx_key!r}")
+        self._require_not_completing()
         if self.begin_count == 0:
             if self.active_transaction is not None:
                 raise RuntimeError("yidl transaction manager state is corrupted")
@@ -194,9 +196,38 @@ class GroupTransactionManager:
         transaction = self.active_transaction
         assert transaction is not None
         return transaction.bind_scope(
-            commit=lambda: self.commit(self.tx_key),
-            rollback=lambda: self.rollback(self.tx_key),
+            commit=lambda: self._commit_scope(transaction),
+            rollback=lambda: self._rollback_scope(transaction),
         )
+
+    def _require_not_completing(self) -> None:
+        if self._completing:
+            raise RuntimeError("yidl transaction key is completing")
+
+    def _require_current(self, transaction: LifecycleTransaction) -> None:
+        if self.active_transaction is not transaction:
+            raise RuntimeError("owned yidl transaction is missing or replaced")
+
+    def require_sole_transaction_owner(self, transaction: LifecycleTransaction) -> None:
+        """Check ownership without validating, publishing, or changing nesting."""
+        if transaction.tx_key != self.tx_key:
+            raise RuntimeError(f"unknown yidl transaction key {transaction.tx_key!r}")
+        self._require_not_completing()
+        self._require_current(transaction)
+        if self.begin_count != 1:
+            raise RuntimeError("yidl transaction acquired an external nested begin")
+
+    def _commit_scope(self, transaction: LifecycleTransaction) -> int | None:
+        if self.active_transaction is not transaction:
+            raise RuntimeError("stale yidl transaction scope cannot commit")
+        return self.commit(self.tx_key)
+
+    def _rollback_scope(self, transaction: LifecycleTransaction) -> int | None:
+        # A nested failure may already have discarded this whole transaction.
+        # Its enclosing exceptional exits must preserve the original exception.
+        if self.active_transaction is not transaction:
+            return None
+        return self.rollback(self.tx_key)
 
     def validate(self, tx_key: Hashable = DEFAULT_TRANSACTION) -> None:
         if tx_key != self.tx_key:
@@ -211,6 +242,7 @@ class GroupTransactionManager:
     def commit_only(self, tx_key: Hashable = DEFAULT_TRANSACTION) -> int | None:
         if tx_key != self.tx_key:
             raise RuntimeError(f"unknown yidl transaction key {tx_key!r}")
+        self._require_not_completing()
         if self.begin_count <= 0:
             raise RuntimeError("no active yidl transaction")
         if self.begin_count > 1:
@@ -220,6 +252,7 @@ class GroupTransactionManager:
         if transaction is None:
             raise RuntimeError("yidl transaction manager state is corrupted")
         tx_id = transaction.tx_id
+        self._completing = True
         try:
             try:
                 transaction.prepare_commits()
@@ -232,36 +265,46 @@ class GroupTransactionManager:
         finally:
             self.active_transaction = None
             self.begin_count = 0
+            self._completing = False
         return tx_id
 
     def commit(self, tx_key: Hashable = DEFAULT_TRANSACTION) -> int | None:
         if tx_key != self.tx_key:
             raise RuntimeError(f"unknown yidl transaction key {tx_key!r}")
+        self._require_not_completing()
         if self.begin_count <= 0:
             raise RuntimeError("no active yidl transaction")
         if self.begin_count > 1:
             self.begin_count -= 1
             return None
+        transaction = self.active_transaction
+        if transaction is None:
+            raise RuntimeError("yidl transaction manager state is corrupted")
         try:
             self.validate(tx_key)
         except BaseException:
-            self.rollback(tx_key)
+            if self.active_transaction is transaction:
+                self.rollback(tx_key)
             raise
+        self._require_current(transaction)
         return self.commit_only(tx_key)
 
     def rollback(self, tx_key: Hashable = DEFAULT_TRANSACTION) -> int | None:
         if tx_key != self.tx_key:
             raise RuntimeError(f"unknown yidl transaction key {tx_key!r}")
+        self._require_not_completing()
         if self.begin_count <= 0 or self.active_transaction is None:
             raise RuntimeError("no active yidl transaction")
         transaction = self.active_transaction
         tx_id = transaction.tx_id
+        self._completing = True
         try:
             transaction.rollback_dirty()
             transaction.after_rollbacks()
         finally:
             self.active_transaction = None
             self.begin_count = 0
+            self._completing = False
         return tx_id
 
     def enlist(self, context: TransactionContext, tx_key: Hashable = DEFAULT_TRANSACTION) -> int:
@@ -296,8 +339,7 @@ class GroupTransactionManager:
 
 @dataclass(slots=True, frozen=True)
 class _MultiGroupTransactionScope:
-    manager: "TransactionManager"
-    groups: tuple[Hashable, ...]
+    transactions: tuple[LifecycleTransaction, ...]
 
     def __enter__(self) -> "_MultiGroupTransactionScope":
         return self
@@ -308,11 +350,16 @@ class _MultiGroupTransactionScope:
         exc: BaseException | None,
         tb: object,
     ) -> bool:
-        del exc, tb
-        if exc_type is None:
-            self.manager.commit(*reversed(self.groups))
-        else:
-            self.manager.rollback(*reversed(self.groups))
+        failures: list[BaseException] = []
+        for transaction in reversed(self.transactions):
+            try:
+                transaction.__exit__(exc_type, exc, tb)
+            except BaseException as error:
+                failures.append(error)
+        if len(failures) == 1:
+            raise failures[0]
+        if failures:
+            raise BaseExceptionGroup("yidl transaction scope completion failed", failures)
         return False
 
 
@@ -353,6 +400,10 @@ class TransactionManager:
     def active_transaction_for(self, tx_key: Hashable = DEFAULT_TRANSACTION) -> LifecycleTransaction | None:
         return self._get_group_manager(tx_key).active_transaction
 
+    def require_sole_transaction_owner(self, transaction: LifecycleTransaction) -> None:
+        """Require this token to own its key with exactly one outstanding begin."""
+        self._get_group_manager(transaction.tx_key).require_sole_transaction_owner(transaction)
+
     def _normalize_groups(self, groups: tuple[Hashable, ...]) -> tuple[Hashable, ...]:
         if not groups:
             return (DEFAULT_TRANSACTION, *self._tx_keys)
@@ -382,9 +433,13 @@ class TransactionManager:
         normalized_groups = self._normalize_groups(groups)
         if len(normalized_groups) == 1:
             return self._get_group_manager(normalized_groups[0]).begin(normalized_groups[0])
-        for group in normalized_groups:
-            self._get_group_manager(group).begin(group)
-        return _MultiGroupTransactionScope(self, normalized_groups)
+        managers = tuple(self._get_group_manager(group) for group in normalized_groups)
+        for manager in managers:
+            manager._require_not_completing()
+        transactions = tuple(
+            manager.begin(manager.tx_key) for manager in managers
+        )
+        return _MultiGroupTransactionScope(transactions)
 
     def validate(self, *groups: Hashable) -> None:
         normalized_groups = self._normalize_groups(groups)
