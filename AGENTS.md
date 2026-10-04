@@ -4,6 +4,13 @@
 
 This file defines repository-level instructions for `yidl-lifecycle`.
 
+## Developer Documentation
+
+- Start with `dev-docs/README.md` for current policy references and pending work.
+- Completed rollout plans and review evidence belong in `dev-docs/history/`.
+  Preserve their verdicts/revisions; archiving does not certify implementation
+  or cancel an unresolved obligation.
+
 ## Paths In Version Control
 
 - Do not store absolute filesystem paths in committed files.
@@ -26,4 +33,3 @@ This file defines repository-level instructions for `yidl-lifecycle`.
 `yidl-lifecycle` owns lifecycle-specific decorator, marker, harvester,
 transaction, binding, generated lifecycle, parity, and performance code.
 Generic YIDL compiler behavior belongs in the `yidl` project.
-

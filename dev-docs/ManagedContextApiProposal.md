@@ -27,9 +27,9 @@ the integration with changed transaction boundaries.
 ## Controlling Material
 
 - `AGENTS.md`: package ownership and canonical success coverage.
-- `dev-docs/YidlTransactionalYidlPhaseF-1Plan.md`: working/staged/current
+- `dev-docs/history/transactional-rollout/YidlTransactionalYidlPhaseF-1Plan.md`: working/staged/current
   storage and transaction completion intent.
-- `dev-docs/YidlPyroCloseTheGapPlan.md`: retained inputs, trusted self
+- `dev-docs/history/design-exploration/YidlPyroCloseTheGapPlan.md`: retained inputs, trusted self
   factories, and non-transactional storage.
 - `dev-docs/YidlLifecycleFieldKindMatrix.md`: field-policy vocabulary; known
   conflicts are called out below rather than treated as implemented behavior.
@@ -309,7 +309,7 @@ Evidence of the conflict at review time:
 
 - `dev-docs/YidlLifecycleFieldKindMatrix.md` said static was non-transactional,
   lazy, and rewritable.
-- `dev-docs/YidlPyrolyzeLifecycleParityPlan.md` describes lazy/write-once static.
+- `dev-docs/history/design-exploration/YidlPyrolyzeLifecycleParityPlan.md` describes lazy/write-once static.
 - `lifecycle_markers.static` says write-once; the three static property
   templates reject a second assignment.
 - `tests/data/gold_src/yidl_transactional_parity_fields1.py` asserts that
@@ -409,7 +409,7 @@ This is a bounded follow-up sequence, not an automatically authorized roll-build
    the accepted I1b canonical fixture and focused integration gates.
 
 The document-review characterization commands and their limits are recorded in
-`dev-docs/ManagedContextApiProposal-Checks.md`. They exercise committed generated
+`dev-docs/history/managed-context-api/ManagedContextApiProposal-Checks.md`. They exercise committed generated
 goldens, not a regenerated decorator, and do not close the L0/D4 implementation
 gate or certify that the live generation pipeline passes its smoke test.
 
