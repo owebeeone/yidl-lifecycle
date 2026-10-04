@@ -56,7 +56,7 @@ workspace changes and unrelated dependency work are outside this object.
 | A2 | Document facades as live access policies, not whole-object freezing or snapshots | Contract clarification |
 | A3 | State the limits of rollback, reference immutability, and freeze/thaw | Contract clarification |
 | A4 | Add an optional constructor spelling, `init_name`, without creating a second field or dependency name | Additive API change requiring implementation approval |
-| A5 | Discuss what non-write-once `static` would mean before choosing its policy | Open operator decision; retain current behavior meanwhile |
+| A5 | Prefer `lazy`, retain `static` as an alias, and permit opt-in mutable storage | Naming and `mutable=True` selected in the operator follow-up; write-once remains the default |
 | A6 | Keep value initialization separate from graph attachment and completion ownership | Preserve accepted integration boundary |
 | A7 | Preserve convenient marker names while treating their policies as independently composable YIDL facts | Design constraint; no generic policy-builder API |
 
@@ -283,9 +283,31 @@ surface, stop and propose that separately.
 
 ## A5: Resolve The Static Conflict Explicitly
 
-Evidence of the conflict:
+### Operator Follow-Up: Naming And Mutability
 
-- `dev-docs/YidlLifecycleFieldKindMatrix.md` says static is non-transactional,
+The subsequent discussion on 2026-10-03 selected `lazy` as the preferred public
+marker name, with `static` retained as an exact compatibility alias. Lazy
+evaluation is distinct from an ordinary field factory: it reads providers at
+first access rather than during construction and may avoid evaluation entirely.
+The cached result is per-instance, non-transactional, and write-once by default.
+The naming change preserves the internal `static` kind, inherited metadata, templates, and
+diagnostics. The field-kind matrix is reconciled to that implemented policy.
+
+The operator subsequently approved `mutable=True` on the same marker. It permits
+replacement through every facade without changing lazy first-read evaluation.
+Assignment before first read bypasses the factory; later assignments replace
+the cached value and do not rerun its factory. This policy is recorded in field
+facts and inherited metadata, and a matcher selects a setter-body contribution
+instead of the existing write-once fallback. No new field kind or generic
+compiler surface is needed. Reset, invalidation, and automatic recomputation
+remain outside this change. Earlier review alternatives below are historical,
+not a prohibition on these subsequent operator-approved changes.
+
+### Historical Review Alternatives
+
+Evidence of the conflict at review time:
+
+- `dev-docs/YidlLifecycleFieldKindMatrix.md` said static was non-transactional,
   lazy, and rewritable.
 - `dev-docs/YidlPyrolyzeLifecycleParityPlan.md` describes lazy/write-once static.
 - `lifecycle_markers.static` says write-once; the three static property

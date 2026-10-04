@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from yidl_lifecycle.lifecycle import _generate_lifecycle_source
 from yidl_lifecycle.lifecycle import const
 from yidl_lifecycle.lifecycle import harvest_lifecycle_definition
 from yidl_lifecycle.lifecycle import initvar
+from yidl_lifecycle.lifecycle import lazy
 from yidl_lifecycle.lifecycle import lifecycle
 from yidl_lifecycle.lifecycle import static
 
@@ -49,21 +51,38 @@ def validate_case(sources: Mapping[str, str]) -> None:
 
 def _fixture_class() -> type[object]:
     calls: list[None] = []
+    mutable_calls: list[int] = []
 
     def make_items() -> list[int]:
         calls.append(None)
         return [1, 2]
 
+    def make_mutable_items(mutable_number: int) -> list[int]:
+        mutable_calls.append(mutable_number)
+        return [mutable_number]
+
     class Config:
         seed: int = initvar(default=3)
         slot_id: int = const(default=7)
         derived_id: int = const(default_factory=lambda seed, slot_id: seed + slot_id)
-        declared: tuple[str, ...] = static()
-        lazy_number: int = static(default=42)
-        items: list[int] = static(default_factory=make_items)
+        declared: tuple[str, ...] = lazy()
+        lazy_number: int = lazy(default=42)
+        items: list[int] = lazy(default_factory=make_items)
         seeded_static: int = static(default_factory=lambda slot_id: slot_id + 5)
+        mutable_unset: int = lazy(mutable=True)
+        mutable_number: int = lazy(default=42, mutable=True)
+        mutable_items: list[int] = lazy(
+            default_factory=make_mutable_items,
+            mutable=True,
+        )
+        mutable_no_init: int = static(
+            default_factory=lambda mutable_number: mutable_number + 1,
+            init=False,
+            mutable=True,
+        )
 
     Config._test_factory_calls = calls
+    Config._test_mutable_factory_calls = mutable_calls
     return Config
 
 
@@ -80,6 +99,19 @@ def _assert_generated_class(namespace: Mapping[str, object]) -> None:
 def _assert_decorator_frontend() -> None:
     generated = lifecycle(_fixture_class())
     _assert_config_class(generated)
+
+    @lifecycle
+    class Child(generated):
+        lazy_number: int = lazy(default=43, mutable=True)
+
+    child = Child()
+    assert child.lazy_number == 43
+    child.lazy_number = 44
+    child.lazy_number = 45
+    assert child.lazy_number == 45
+    child.mutable_number = 10
+    child.mutable_number = 20
+    assert child.mutable_items == [20]
 
 
 def _assert_config_class(generated: type[object]) -> None:
@@ -130,6 +162,53 @@ def _assert_config_class(generated: type[object]) -> None:
     assert item.items is item.items
     assert item.seeded_static == 12
 
+    mutable_calls = getattr(
+        generated.__yidl_lifecycle_user_class__, "_test_mutable_factory_calls"
+    )
+    assert mutable_calls == []
+    _assert_raises(
+        AttributeError,
+        "static field 'mutable_unset' is not initialized",
+        lambda: getattr(item, "mutable_unset"),
+    )
+    item.mutable_unset = 1
+    item.mutable_unset = 2
+    assert item.mutable_unset == 2
+
+    assert item.mutable_number == 42
+    item.mutable_number = 10
+    item.current.mutable_number = 11
+    item.working.mutable_number = 12
+    assert item.mutable_number == item.current.mutable_number == 12
+
+    constructor_value = generated(mutable_items=[5])
+    assert constructor_value.mutable_items == [5]
+    assignment_first = generated()
+    assignment_first.mutable_items = [6]
+    assignment_first.mutable_items = [7]
+    assert assignment_first.mutable_items == [7]
+    assert mutable_calls == []
+
+    assert item.mutable_items == [12]
+    assert mutable_calls == [12]
+    item.mutable_number = 13
+    assert item.mutable_items == [12]
+    item.current.mutable_items = [14]
+    item.working.mutable_items = [15]
+    assert item.mutable_items == [15]
+    assert mutable_calls == [12]
+
+    assert item.mutable_no_init == 14
+    item.mutable_no_init = 16
+    item.mutable_no_init = 17
+    assert item.mutable_no_init == 17
+
+    manager = item._y_get_transaction_manager()
+    manager.begin()
+    item.mutable_number = 18
+    manager.rollback()
+    assert item.mutable_number == 18
+
 
 def _assert_raises(
     exception_type: type[BaseException],
@@ -156,6 +235,30 @@ def _assert_source_shape(sources: Mapping[str, str]) -> None:
         assert (
             "_Config_seeded_static_default_factory(slot_id=self.slot_id)" in generated
         )
+        facade = next(
+            node
+            for node in ast.walk(ast.parse(generated))
+            if isinstance(node, ast.ClassDef) and node.name == "Config_FacadeBase"
+        )
+        setters = {
+            node.name: node
+            for node in facade.body
+            if isinstance(node, ast.FunctionDef)
+            and any(
+                isinstance(decorator, ast.Attribute) and decorator.attr == "setter"
+                for decorator in node.decorator_list
+            )
+        }
+        assert any(isinstance(node, ast.Raise) for node in ast.walk(setters["items"]))
+        for name in (
+            "mutable_unset",
+            "mutable_number",
+            "mutable_items",
+            "mutable_no_init",
+        ):
+            assert not any(
+                isinstance(node, ast.If | ast.Raise) for node in ast.walk(setters[name])
+            )
 
 
 def _prettier_source(source: str) -> str:

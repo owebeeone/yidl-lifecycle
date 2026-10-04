@@ -20,6 +20,7 @@ from yidl_lifecycle.lifecycle_markers import commit_order_key
 from yidl_lifecycle.lifecycle_markers import const
 from yidl_lifecycle.lifecycle_markers import field
 from yidl_lifecycle.lifecycle_markers import initvar
+from yidl_lifecycle.lifecycle_markers import lazy
 from yidl_lifecycle.lifecycle_markers import local_store
 from yidl_lifecycle.lifecycle_markers import managed
 from yidl_lifecycle.lifecycle_markers import normalize_marker
@@ -277,6 +278,7 @@ __all__ = [
     "HarvestedLifecycle",
     "harvest_lifecycle_definition",
     "initvar",
+    "lazy",
     "lifecycle",
     "local_store",
     "managed",

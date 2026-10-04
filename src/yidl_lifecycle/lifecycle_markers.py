@@ -32,6 +32,7 @@ class LifecycleMarker:
     compare: str = "value"
     freeze: object = MISSING
     thaw: object = MISSING
+    mutable: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +56,7 @@ class FieldDecl:
     freeze: object = MISSING
     has_thaw: bool = False
     thaw: object = MISSING
+    mutable: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,14 +141,15 @@ def const(
     )
 
 
-def static(
+def lazy(
     *,
     default: object = MISSING,
     default_factory: object = MISSING,
     allow_self_factory: bool = False,
     init: bool = True,
+    mutable: bool = False,
 ) -> LifecycleMarker:
-    """Declare a write-once per-instance lifecycle value."""
+    """Declare lazy per-instance storage, write-once unless ``mutable=True``."""
 
     return _marker(
         kind="static",
@@ -156,7 +159,11 @@ def static(
         allow_self_factory=allow_self_factory,
         init=init,
         tx_key=MISSING,
+        mutable=mutable,
     )
+
+
+static = lazy
 
 
 def managed(
@@ -373,6 +380,7 @@ def normalize_marker(
         freeze=marker.freeze,
         has_thaw=marker.thaw is not MISSING,
         thaw=marker.thaw,
+        mutable=marker.mutable,
     )
 
 
@@ -388,6 +396,7 @@ def _marker(
     compare: str = "value",
     freeze: object = MISSING,
     thaw: object = MISSING,
+    mutable: bool = False,
 ) -> LifecycleMarker:
     if default is not MISSING and default_factory is not MISSING:
         raise LifecycleDefinitionError(
@@ -397,6 +406,8 @@ def _marker(
         raise LifecycleDefinitionError("init must be a bool")
     if not isinstance(allow_self_factory, bool):
         raise LifecycleDefinitionError("allow_self_factory must be a bool")
+    if not isinstance(mutable, bool):
+        raise LifecycleDefinitionError("mutable must be a bool")
     if compare not in {"value", "identity"}:
         raise LifecycleDefinitionError("compare must be 'value' or 'identity'")
     if default_factory is not MISSING and not callable(default_factory):
@@ -426,6 +437,7 @@ def _marker(
         compare=compare,
         freeze=freeze,
         thaw=thaw,
+        mutable=mutable,
     )
 
 

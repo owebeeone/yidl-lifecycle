@@ -5,7 +5,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Config_annotations, _Config_tx_keys, _Config_seed_default, _Config_slot_id_default, _Config_derived_id_default_factory, _Config_lazy_number_default, _Config_items_default_factory, _Config_seeded_static_default_factory):
+def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Config_annotations, _Config_tx_keys, _Config_seed_default, _Config_slot_id_default, _Config_derived_id_default_factory, _Config_lazy_number_default, _Config_items_default_factory, _Config_seeded_static_default_factory, _Config_mutable_number_default, _Config_mutable_items_default_factory, _Config_mutable_no_init_default_factory):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -26,7 +26,7 @@ def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Confi
         return result
 
     class Config_State:
-        __slots__ = ('_y_transaction_manager', '_y_default_ref', '_y_current_ref', '_y_working_ref', '_y_slot_id_value', '_y_derived_id_value', '_y_declared_value', '_y_lazy_number_value', '_y_items_value', '_y_seeded_static_value', '_y_working_tx_ids')
+        __slots__ = ('_y_transaction_manager', '_y_default_ref', '_y_current_ref', '_y_working_ref', '_y_slot_id_value', '_y_derived_id_value', '_y_declared_value', '_y_lazy_number_value', '_y_items_value', '_y_seeded_static_value', '_y_mutable_unset_value', '_y_mutable_number_value', '_y_mutable_items_value', '_y_mutable_no_init_value', '_y_working_tx_ids')
         __yidl_tx_index_to_key__ = _Config_tx_keys
         __yidl_tx_key_to_index__ = {key: index for index, key in enumerate(_Config_tx_keys)}
 
@@ -209,7 +209,7 @@ def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Confi
 
     class Config_FacadeBase(decorated_cls):
         __slots__ = ('_y_state',) if hasattr(decorated_cls, '__weakref__') else ('_y_state', '__weakref__')
-        _y_lifecycle_field_names = frozenset(('slot_id', 'derived_id', 'declared', 'lazy_number', 'items', 'seeded_static'))
+        _y_lifecycle_field_names = frozenset(('slot_id', 'derived_id', 'declared', 'lazy_number', 'items', 'seeded_static', 'mutable_unset', 'mutable_number', 'mutable_items', 'mutable_no_init'))
 
         def __setattr__(self, name, value):
             if name in self._y_lifecycle_field_names:
@@ -343,6 +343,60 @@ def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Confi
                 return
             raise AttributeError(f"static field {'seeded_static'!r} is already initialized")
 
+        @property
+        def mutable_unset(self):
+            value = self._y_state._y_mutable_unset_value
+            if value is VOID:
+                raise AttributeError(f"static field {'mutable_unset'!r} is not initialized")
+            return value
+
+        @mutable_unset.setter
+        def mutable_unset(self, value):
+            state = self._y_state
+            state._y_mutable_unset_value = value
+
+        @property
+        def mutable_number(self):
+            state = self._y_state
+            value = state._y_mutable_number_value
+            if value is VOID:
+                value = _Config_mutable_number_default
+                state._y_mutable_number_value = value
+            return value
+
+        @mutable_number.setter
+        def mutable_number(self, value):
+            state = self._y_state
+            state._y_mutable_number_value = value
+
+        @property
+        def mutable_items(self):
+            state = self._y_state
+            value = state._y_mutable_items_value
+            if value is VOID:
+                value = _Config_mutable_items_default_factory(mutable_number=self.mutable_number)
+                state._y_mutable_items_value = value
+            return value
+
+        @mutable_items.setter
+        def mutable_items(self, value):
+            state = self._y_state
+            state._y_mutable_items_value = value
+
+        @property
+        def mutable_no_init(self):
+            state = self._y_state
+            value = state._y_mutable_no_init_value
+            if value is VOID:
+                value = _Config_mutable_no_init_default_factory(mutable_number=self.mutable_number)
+                state._y_mutable_no_init_value = value
+            return value
+
+        @mutable_no_init.setter
+        def mutable_no_init(self, value):
+            state = self._y_state
+            state._y_mutable_no_init_value = value
+
     class Config(Config_FacadeBase):
         __slots__ = ('_y_current_facade', '_y_working_facade')
         __annotations__ = _Config_annotations
@@ -352,7 +406,7 @@ def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Confi
         __yidl_tx_index_to_key__ = _Config_tx_keys
         __yidl_tx_key_to_index__ = {key: index for index, key in enumerate(_Config_tx_keys)}
 
-        def __init__(self, seed: 'int'=_Config_seed_default, slot_id: 'int'=_Config_slot_id_default, derived_id: 'int'=_HAS_DEFAULT_FACTORY, declared: 'tuple[str, ...]'=_HAS_DEFAULT_FACTORY, lazy_number: 'int'=_HAS_DEFAULT_FACTORY, items: 'list[int]'=_HAS_DEFAULT_FACTORY, seeded_static: 'int'=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
+        def __init__(self, seed: 'int'=_Config_seed_default, slot_id: 'int'=_Config_slot_id_default, derived_id: 'int'=_HAS_DEFAULT_FACTORY, declared: 'tuple[str, ...]'=_HAS_DEFAULT_FACTORY, lazy_number: 'int'=_HAS_DEFAULT_FACTORY, items: 'list[int]'=_HAS_DEFAULT_FACTORY, seeded_static: 'int'=_HAS_DEFAULT_FACTORY, mutable_unset: 'int'=_HAS_DEFAULT_FACTORY, mutable_number: 'int'=_HAS_DEFAULT_FACTORY, mutable_items: 'list[int]'=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
             state = object.__new__(Config_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -378,6 +432,19 @@ def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Confi
                 state._y_seeded_static_value = VOID
             else:
                 state._y_seeded_static_value = seeded_static
+            if mutable_unset is _HAS_DEFAULT_FACTORY:
+                state._y_mutable_unset_value = VOID
+            else:
+                state._y_mutable_unset_value = mutable_unset
+            if mutable_number is _HAS_DEFAULT_FACTORY:
+                state._y_mutable_number_value = VOID
+            else:
+                state._y_mutable_number_value = mutable_number
+            if mutable_items is _HAS_DEFAULT_FACTORY:
+                state._y_mutable_items_value = VOID
+            else:
+                state._y_mutable_items_value = mutable_items
+            state._y_mutable_no_init_value = VOID
             if derived_id is _HAS_DEFAULT_FACTORY:
                 derived_id = _Config_derived_id_default_factory(seed=seed, slot_id=self.slot_id)
             state._y_derived_id_value = derived_id
@@ -385,6 +452,10 @@ def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Confi
                 _Config_items_default_factory()
             if False:
                 _Config_seeded_static_default_factory(slot_id=self.slot_id)
+            if False:
+                _Config_mutable_items_default_factory(mutable_number=self.mutable_number)
+            if False:
+                _Config_mutable_no_init_default_factory(mutable_number=self.mutable_number)
             state._y_working_tx_ids = [None for _group in _Config_tx_keys]
 
     class Config_Current(Config_FacadeBase):

@@ -61,12 +61,13 @@ concept LifecycleConstStatic extends owned.LifecycleOwned {
         @property_setter_target_name__astichi_arg__.setter
         def property_setter_name__astichi_arg__(self, value):
             state = self._y_state
-            if state.astichi_ref(external=state_slot) is VOID:
-                state.astichi_ref(external=state_slot)._ = value
-                return
-            raise AttributeError(
-                f"static field {astichi_bind_external(field_name)!r} is already initialized"
-            )
+            with astichi_hole(lazy_setter_body) as astichi_fallback:
+                if state.astichi_ref(external=state_slot) is VOID:
+                    state.astichi_ref(external=state_slot)._ = value
+                    return
+                raise AttributeError(
+                    f"static field {astichi_bind_external(field_name)!r} is already initialized"
+                )
     ]$ {
         keep VOID
     }
@@ -84,12 +85,13 @@ concept LifecycleConstStatic extends owned.LifecycleOwned {
         @property_setter_target_name__astichi_arg__.setter
         def property_setter_name__astichi_arg__(self, value):
             state = self._y_state
-            if state.astichi_ref(external=state_slot) is VOID:
-                state.astichi_ref(external=state_slot)._ = value
-                return
-            raise AttributeError(
-                f"static field {astichi_bind_external(field_name)!r} is already initialized"
-            )
+            with astichi_hole(lazy_setter_body) as astichi_fallback:
+                if state.astichi_ref(external=state_slot) is VOID:
+                    state.astichi_ref(external=state_slot)._ = value
+                    return
+                raise AttributeError(
+                    f"static field {astichi_bind_external(field_name)!r} is already initialized"
+                )
     ]$ {
         keep VOID
     }
@@ -109,15 +111,20 @@ concept LifecycleConstStatic extends owned.LifecycleOwned {
         @property_setter_target_name__astichi_arg__.setter
         def property_setter_name__astichi_arg__(self, value):
             state = self._y_state
-            if state.astichi_ref(external=state_slot) is VOID:
-                state.astichi_ref(external=state_slot)._ = value
-                return
-            raise AttributeError(
-                f"static field {astichi_bind_external(field_name)!r} is already initialized"
-            )
+            with astichi_hole(lazy_setter_body) as astichi_fallback:
+                if state.astichi_ref(external=state_slot) is VOID:
+                    state.astichi_ref(external=state_slot)._ = value
+                    return
+                raise AttributeError(
+                    f"static field {astichi_bind_external(field_name)!r} is already initialized"
+                )
     ]$ {
         keep VOID
     }
+
+    resource MutableLazyAssignment = template $[
+        astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = astichi_pass(value, outer_bind=True)
+    ]$
 
     resource StaticDefaultFactoryEvalPlaceholder = template $[
         if False:
@@ -351,6 +358,17 @@ concept LifecycleConstStatic extends owned.LifecycleOwned {
         external field_name = FieldName
     }
 
+    contribution MutableLazySetter = MutableLazyAssignment {
+        index FieldOrder
+        order FieldOrder
+
+        target lazy_setter_body {
+            build /ClassDef/StaticFieldProperty[FieldOrder]
+        }
+
+        external state_slot = ValueSlotName
+    }
+
     contribution StaticDefaultFactoryEvalPlaceholderContribution = StaticDefaultFactoryEvalPlaceholder {
         as DefaultFactoryEval
         index EvalOrder
@@ -466,6 +484,10 @@ concept LifecycleConstStatic extends owned.LifecycleOwned {
                              -> StaticDefaultFactoryFieldProperty
     }
 
+    matcher LazySetterContributions(field: StaticFields) -> contribution {
+        rule mutable when Mutable == True -> MutableLazySetter
+    }
+
     matcher DefaultFactoryEvalContributions(step: DefaultFactoryEvaluationSteps) -> contribution {
         rule const_init when EvalFieldKind == "const"
                         and EvalInit == True
@@ -560,6 +582,12 @@ concept LifecycleConstStatic extends owned.LifecycleOwned {
             from field: StaticFields
             where FieldOwner == ClassId {
             apply static_properties using StaticPropertyContributions
+        }
+
+        phase lazy_setters after properties_static
+            from field: StaticFields
+            where FieldOwner == ClassId {
+            apply lazy_setters using LazySetterContributions
         }
 
         phase static_default_factory_args after properties_static

@@ -1,7 +1,7 @@
 # ManagedContext: Transaction-Scoped Editing
 
 Status: user-facing DRAFT, 2026-10-03. Existing API is shown first. Proposed
-constructor aliases and static changes at the end are not implemented yet.
+constructor aliases at the end are not implemented yet.
 
 Pyrolyze's LCM runtime locally aliases the library's `lifecycle` decorator as
 `managed_context`. The older `pyrolyze.lifecycle.managed_context` is a separate
@@ -144,12 +144,27 @@ effects; a failed commit is not proof that candidates were never accepted.
 
 ## Initialization Lifetimes
 
-`default_factory` computes a value during construction, except for lazy static
+`default_factory` computes a value during construction, except for `lazy`
 initialization. Named parameters request declared field/input providers; they
 do not establish a continuously recomputed formula. Supplying a constructor
 value skips that field's construction factory. An `init=False` construction
 factory still runs. Transient `working_default_factory` initializes a
 transaction-local value for each transaction in which it is accessed.
+
+`lazy` is the preferred spelling for per-instance lazy storage;
+`static` remains an exact compatibility alias. A constructor value or first
+assignment initializes the field. Otherwise, first read uses its default or
+calls its factory with the provider values visible at that access. The result
+is cached, and later assignments raise unless `mutable=True`. With that option,
+assigning before first read bypasses the factory, and later assignments replace
+the cached value immediately through any facade. Replacement does not rerun the
+factory; dependency changes do not trigger recomputation. Both policies remain
+nontransactional. The internal field kind and generated diagnostics retain
+`static` for compatibility.
+
+```python
+cache: dict[str, int] = lazy(default_factory=dict, mutable=True)
+```
 
 ## Proposed Changes: Not Available Yet
 
@@ -168,10 +183,3 @@ still creates no constructor parameter. Duplicate constructor names and
 inherited renaming are rejected.
 Existing markers currently reject this new option; use the existing initvar
 and copying-factory pattern until it is implemented.
-
-Current `static` fields are lazy/write-once. Whether they should permit
-replacement is an open discussion, not a selected change. One alternative is
-lazy ordinary storage: first read initializes an unset value, and later writes
-replace it immediately without rerunning its factory. Reset, invalidation, and
-automatic recomputation are different behaviors and are not implied by that
-alternative. Keep using the current write-once contract until a decision is made.

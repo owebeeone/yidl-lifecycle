@@ -83,6 +83,9 @@ _BindingShapeProperty = RuntimeProperty(
 _CompareProperty = RuntimeProperty(
     "Compare", str, default="value", storage_name="compare"
 )
+_MutableProperty = RuntimeProperty(
+    "Mutable", bool, default=False, storage_name="mutable"
+)
 _AnnotationProperty = RuntimeProperty(
     "Annotation", object, default=object, storage_name="annotation"
 )
@@ -547,6 +550,7 @@ _PlainFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -585,6 +589,7 @@ _InitVarFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -623,6 +628,7 @@ _ClassVarFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -710,6 +716,7 @@ _ManagedFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -832,6 +839,7 @@ _TransientFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -886,6 +894,7 @@ _BindingFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -924,6 +933,7 @@ _OwnedFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -962,6 +972,7 @@ _ConstFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -1000,6 +1011,7 @@ _StaticFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -1038,6 +1050,7 @@ _LocalStoreFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -1719,6 +1732,7 @@ class PlainField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -1754,6 +1768,7 @@ class PlainField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -1791,6 +1806,7 @@ class PlainField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -1841,6 +1857,9 @@ class PlainField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -1959,6 +1978,7 @@ class PlainField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -1998,6 +2018,7 @@ class PlainField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -2051,6 +2072,7 @@ class InitVarField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -2086,6 +2108,7 @@ class InitVarField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -2123,6 +2146,7 @@ class InitVarField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -2173,6 +2197,9 @@ class InitVarField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -2291,6 +2318,7 @@ class InitVarField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -2330,6 +2358,7 @@ class InitVarField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -2383,6 +2412,7 @@ class ClassVarField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -2418,6 +2448,7 @@ class ClassVarField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -2455,6 +2486,7 @@ class ClassVarField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -2505,6 +2537,9 @@ class ClassVarField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -2623,6 +2658,7 @@ class ClassVarField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -2662,6 +2698,7 @@ class ClassVarField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -3138,6 +3175,7 @@ class ManagedField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -3173,6 +3211,7 @@ class ManagedField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -3210,6 +3249,7 @@ class ManagedField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -3260,6 +3300,9 @@ class ManagedField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -3378,6 +3421,7 @@ class ManagedField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -3417,6 +3461,7 @@ class ManagedField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -4171,6 +4216,7 @@ class TransientField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -4206,6 +4252,7 @@ class TransientField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -4243,6 +4290,7 @@ class TransientField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -4293,6 +4341,9 @@ class TransientField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -4411,6 +4462,7 @@ class TransientField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -4450,6 +4502,7 @@ class TransientField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -4621,6 +4674,7 @@ class BindingField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -4656,6 +4710,7 @@ class BindingField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -4693,6 +4748,7 @@ class BindingField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -4743,6 +4799,9 @@ class BindingField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -4861,6 +4920,7 @@ class BindingField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -4900,6 +4960,7 @@ class BindingField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -4953,6 +5014,7 @@ class OwnedField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -4988,6 +5050,7 @@ class OwnedField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -5025,6 +5088,7 @@ class OwnedField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -5075,6 +5139,9 @@ class OwnedField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -5193,6 +5260,7 @@ class OwnedField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -5232,6 +5300,7 @@ class OwnedField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -5285,6 +5354,7 @@ class ConstField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -5320,6 +5390,7 @@ class ConstField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -5357,6 +5428,7 @@ class ConstField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -5407,6 +5479,9 @@ class ConstField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -5525,6 +5600,7 @@ class ConstField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -5564,6 +5640,7 @@ class ConstField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -5617,6 +5694,7 @@ class StaticField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -5652,6 +5730,7 @@ class StaticField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -5689,6 +5768,7 @@ class StaticField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -5739,6 +5819,9 @@ class StaticField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -5857,6 +5940,7 @@ class StaticField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -5896,6 +5980,7 @@ class StaticField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -5949,6 +6034,7 @@ class LocalStoreField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -5984,6 +6070,7 @@ class LocalStoreField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -6021,6 +6108,7 @@ class LocalStoreField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -6071,6 +6159,9 @@ class LocalStoreField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -6189,6 +6280,7 @@ class LocalStoreField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -6228,6 +6320,7 @@ class LocalStoreField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -7079,6 +7172,7 @@ ASSEMBLY_PROPERTIES = {
         name="BindingShape", storage_name="binding_shape"
     ),
     "Compare": _YidlSimpleNamespace(name="Compare", storage_name="compare"),
+    "Mutable": _YidlSimpleNamespace(name="Mutable", storage_name="mutable"),
     "Annotation": _YidlSimpleNamespace(name="Annotation", storage_name="annotation"),
     "Init": _YidlSimpleNamespace(name="Init", storage_name="init"),
     "HasDefault": _YidlSimpleNamespace(name="HasDefault", storage_name="has_default"),
@@ -7370,7 +7464,7 @@ def build_lifecycle_class(decorated_cls, builder_params__astichi_param_hole__):
     astichi_hole(function_body)
     astichi_hole(return_statement)""",
         file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-        line_number=217,
+        line_number=219,
     ),
     "BuilderParam": astichi_template(
         from_astichi_code(
@@ -7378,7 +7472,7 @@ def build_lifecycle_class(decorated_cls, builder_params__astichi_param_hole__):
 def astichi_params(*, value_name__astichi_arg__):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=235,
+            line_number=237,
         )
     ),
     "TransactionManagerParam": astichi_template(
@@ -7387,14 +7481,14 @@ def astichi_params(*, value_name__astichi_arg__):
 def astichi_params(*, transaction_manager=None):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=240,
+            line_number=242,
         )
     ),
     "StateSlotEntry": astichi_template(
         from_astichi_code(
             "astichi_bind_external(slot_name)",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=245,
+            line_number=247,
         )
     ),
     "InitParamRequired": astichi_template(
@@ -7403,7 +7497,7 @@ def astichi_params(*, transaction_manager=None):
 def astichi_params(param_name__astichi_arg__: astichi_bind_external(annotation)):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=249,
+            line_number=251,
         )
     ),
     "InitParamDefault": astichi_template(
@@ -7415,7 +7509,7 @@ def astichi_params(
 ):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=254,
+            line_number=256,
         )
     ),
     "PlainStateAssignment": astichi_template(
@@ -7426,7 +7520,7 @@ astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = astich
     outer_bind=True,
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=262,
+            line_number=264,
         )
     ),
     "InitVarLocalDefaultAssignment": astichi_template(
@@ -7437,7 +7531,7 @@ init_value_name__astichi_arg__ = astichi_pass(
     outer_bind=True,
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=269,
+            line_number=271,
         )
     ),
     "PlainProperty": astichi_template(
@@ -7451,7 +7545,7 @@ def property_getter_name__astichi_arg__(self):
 def property_setter_name__astichi_arg__(self, value):
     self._y_state.astichi_ref(external=state_slot)._ = value""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=276,
+            line_number=278,
         )
     ),
     "ClassVarDefaultAssignment": astichi_template(
@@ -7462,7 +7556,7 @@ classvar_name__astichi_arg__ = astichi_pass(
     outer_bind=True,
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=286,
+            line_number=288,
         )
     ),
     "CommitOrderKeyBranch": astichi_template(
@@ -7475,7 +7569,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         return self._y_get_default_facade().astichi_ref(external=method_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=293,
+            line_number=295,
         )
     ),
     "RequiresValidationBranch": astichi_template(
@@ -7487,7 +7581,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         return True""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=302,
+            line_number=304,
         )
     ),
     "ValidateCommitBranch": astichi_template(
@@ -7502,7 +7596,7 @@ def astichi_elif():
         if result is False:
             return False""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=310,
+            line_number=312,
         )
     ),
     "TransactionHookCall": astichi_template(
@@ -7515,7 +7609,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         self._y_get_default_facade().astichi_ref(external=method_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=321,
+            line_number=323,
         )
     ),
     "CommitOrderKeyFallbackBranch": astichi_template(
@@ -7525,7 +7619,7 @@ def astichi_elif():
     if True:
         return ()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=330,
+            line_number=332,
         )
     ),
     "RequiresValidationFallbackBranch": astichi_template(
@@ -7535,7 +7629,7 @@ def astichi_elif():
     if True:
         return False""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=336,
+            line_number=338,
         )
     ),
     "ValidateCommitFallbackBranch": astichi_template(
@@ -7545,7 +7639,7 @@ def astichi_elif():
     if True:
         return True""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=342,
+            line_number=344,
         )
     ),
     "PassFallbackBranch": astichi_template(
@@ -7555,7 +7649,7 @@ def astichi_elif():
     if True:
         pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=348,
+            line_number=350,
         )
     ),
     "ClassBundle": astichi_template(
@@ -7884,7 +7978,7 @@ class working_facade_class_decl_name__astichi_arg__(
     with astichi_hole(working_facade_properties) as astichi_fallback:
         pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=354,
+            line_number=356,
             keep_names=(
                 "DEFAULT_TRANSACTION",
                 "TransactionManager",
@@ -7911,7 +8005,7 @@ return_class_module_ref__astichi_arg__.__module__ = astichi_pass(
 ).__module__
 return return_class_result_ref__astichi_arg__""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=682,
+            line_number=684,
         )
     ),
     "BuildTransactionFactsBody": from_astichi_code(
@@ -9801,12 +9895,13 @@ def property_getter_name__astichi_arg__(self):
 @property_setter_target_name__astichi_arg__.setter
 def property_setter_name__astichi_arg__(self, value):
     state = self._y_state
-    if state.astichi_ref(external=state_slot) is VOID:
-        state.astichi_ref(external=state_slot)._ = value
-        return
-    raise AttributeError(
-        f"static field {astichi_bind_external(field_name)!r} is already initialized"
-    )""",
+    with astichi_hole(lazy_setter_body) as astichi_fallback:
+        if state.astichi_ref(external=state_slot) is VOID:
+            state.astichi_ref(external=state_slot)._ = value
+            return
+        raise AttributeError(
+            f"static field {astichi_bind_external(field_name)!r} is already initialized"
+        )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_const_static.yidl",
             line_number=52,
             keep_names=("VOID",),
@@ -9827,14 +9922,15 @@ def property_getter_name__astichi_arg__(self):
 @property_setter_target_name__astichi_arg__.setter
 def property_setter_name__astichi_arg__(self, value):
     state = self._y_state
-    if state.astichi_ref(external=state_slot) is VOID:
-        state.astichi_ref(external=state_slot)._ = value
-        return
-    raise AttributeError(
-        f"static field {astichi_bind_external(field_name)!r} is already initialized"
-    )""",
+    with astichi_hole(lazy_setter_body) as astichi_fallback:
+        if state.astichi_ref(external=state_slot) is VOID:
+            state.astichi_ref(external=state_slot)._ = value
+            return
+        raise AttributeError(
+            f"static field {astichi_bind_external(field_name)!r} is already initialized"
+        )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_const_static.yidl",
-            line_number=75,
+            line_number=76,
             keep_names=("VOID",),
         )
     ),
@@ -9855,15 +9951,23 @@ def property_getter_name__astichi_arg__(self):
 @property_setter_target_name__astichi_arg__.setter
 def property_setter_name__astichi_arg__(self, value):
     state = self._y_state
-    if state.astichi_ref(external=state_slot) is VOID:
-        state.astichi_ref(external=state_slot)._ = value
-        return
-    raise AttributeError(
-        f"static field {astichi_bind_external(field_name)!r} is already initialized"
-    )""",
+    with astichi_hole(lazy_setter_body) as astichi_fallback:
+        if state.astichi_ref(external=state_slot) is VOID:
+            state.astichi_ref(external=state_slot)._ = value
+            return
+        raise AttributeError(
+            f"static field {astichi_bind_external(field_name)!r} is already initialized"
+        )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_const_static.yidl",
-            line_number=98,
+            line_number=100,
             keep_names=("VOID",),
+        )
+    ),
+    "MutableLazyAssignment": astichi_template(
+        from_astichi_code(
+            "astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = astichi_pass(value, outer_bind=True)",
+            file_name="src/yidl_lifecycle/yidl/lifecycle_const_static.yidl",
+            line_number=126,
         )
     ),
     "StaticDefaultFactoryEvalPlaceholder": astichi_template(
@@ -9874,7 +9978,7 @@ if False:
         **astichi_hole(default_factory_args)
     )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_const_static.yidl",
-            line_number=123,
+            line_number=130,
         )
     ),
     "StaticDefaultFactoryStoredArg": astichi_template(
@@ -9887,7 +9991,7 @@ astichi_funcargs(
     ).astichi_ref(external=provider_name)
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_const_static.yidl",
-            line_number=130,
+            line_number=137,
         )
     ),
     "StaticDefaultFactoryClsArg": astichi_template(
@@ -9900,7 +10004,7 @@ astichi_funcargs(
     )
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_const_static.yidl",
-            line_number=139,
+            line_number=146,
         )
     ),
     "StaticDefaultFactorySelfArg": astichi_template(
@@ -9913,14 +10017,14 @@ astichi_funcargs(
     )
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_const_static.yidl",
-            line_number=148,
+            line_number=155,
         )
     ),
     "StaticDefaultFactoryEmptyArg": astichi_template(
         from_astichi_code(
             "astichi_funcargs()",
             file_name="src/yidl_lifecycle/yidl/lifecycle_const_static.yidl",
-            line_number=157,
+            line_number=164,
         )
     ),
     "LocalStoreDefaultAssignment": astichi_template(
@@ -15322,6 +15426,37 @@ ASSEMBLY_CONTRIBUTIONS = {
             ),
         ),
     ),
+    "MutableLazySetter": ContributionSpec(
+        name="MutableLazySetter",
+        source_name="MutableLazyAssignment",
+        source_kind="resource",
+        build_name="MutableLazySetter",
+        index=ValueRef("FieldOrder"),
+        order=ValueRef("FieldOrder"),
+        target=TargetSpec(
+            name="lazy_setter_body",
+            paths=(
+                TargetPathSpec(
+                    kind="build",
+                    path=PathSpec(
+                        segments=(
+                            PathSegmentSpec(kind="name", name="ClassDef", indexes=()),
+                            PathSegmentSpec(
+                                kind="name",
+                                name="StaticFieldProperty",
+                                indexes=(ValueRef("FieldOrder"),),
+                            ),
+                        )
+                    ),
+                ),
+            ),
+        ),
+        bindings=(
+            BindingSpec(
+                kind="external", name="state_slot", value=ValueRef("ValueSlotName")
+            ),
+        ),
+    ),
     "StaticDefaultFactoryEvalPlaceholderContribution": ContributionSpec(
         name="StaticDefaultFactoryEvalPlaceholderContribution",
         source_name="StaticDefaultFactoryEvalPlaceholder",
@@ -18118,6 +18253,25 @@ ASSEMBLY_MATCHERS = {
             ),
         ),
     ),
+    "LazySetterContributions": ContributionMatcherSpec(
+        name="LazySetterContributions",
+        inputs=(
+            AssemblyInputSpec(
+                name="field", collection_name="StaticFields", collection=None
+            ),
+        ),
+        default_contribution_name=None,
+        rules=(
+            ContributionRuleSpec(
+                name="mutable",
+                condition=EqConditionSpec(
+                    left=ValueRef("Mutable"), right=LiteralValueRef(True)
+                ),
+                contribution_name="MutableLazySetter",
+                weight=1.0,
+            ),
+        ),
+    ),
     "StaticDefaultFactoryArgContributions": ContributionMatcherSpec(
         name="StaticDefaultFactoryArgContributions",
         inputs=(
@@ -20057,6 +20211,23 @@ ASSEMBLY_EDGES = {
         ),
         matcher_name="StaticPropertyContributions",
     ),
+    "CoreClassProduction.lazy_setters": AssemblyEdgeSpec(
+        name="CoreClassProduction.lazy_setters",
+        context_inputs=(
+            AssemblyInputSpec(
+                name="lifecycle_class", collection_name="Classes", collection=None
+            ),
+        ),
+        from_inputs=(
+            AssemblyInputSpec(
+                name="field", collection_name="StaticFields", collection=None
+            ),
+        ),
+        condition=EqConditionSpec(
+            left=ValueRef("FieldOwner"), right=ValueRef("ClassId")
+        ),
+        matcher_name="LazySetterContributions",
+    ),
     "CoreClassProduction.static_default_factory_args": AssemblyEdgeSpec(
         name="CoreClassProduction.static_default_factory_args",
         context_inputs=(
@@ -21898,6 +22069,29 @@ ASSEMBLY_PRODUCTIONS = {
                         left=ValueRef("FieldOwner"), right=ValueRef("ClassId")
                     ),
                     matcher_name="StaticPropertyContributions",
+                )
+            ),
+            InlineApplySpec(
+                edge=AssemblyEdgeSpec(
+                    name="CoreClassProduction.lazy_setters",
+                    context_inputs=(
+                        AssemblyInputSpec(
+                            name="lifecycle_class",
+                            collection_name="Classes",
+                            collection=None,
+                        ),
+                    ),
+                    from_inputs=(
+                        AssemblyInputSpec(
+                            name="field",
+                            collection_name="StaticFields",
+                            collection=None,
+                        ),
+                    ),
+                    condition=EqConditionSpec(
+                        left=ValueRef("FieldOwner"), right=ValueRef("ClassId")
+                    ),
+                    matcher_name="LazySetterContributions",
                 )
             ),
             InlineApplySpec(

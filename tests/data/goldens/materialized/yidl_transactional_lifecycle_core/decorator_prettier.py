@@ -81,6 +81,9 @@ _BindingShapeProperty = RuntimeProperty(
 _CompareProperty = RuntimeProperty(
     "Compare", str, default="value", storage_name="compare"
 )
+_MutableProperty = RuntimeProperty(
+    "Mutable", bool, default=False, storage_name="mutable"
+)
 _AnnotationProperty = RuntimeProperty(
     "Annotation", object, default=object, storage_name="annotation"
 )
@@ -364,6 +367,7 @@ _PlainFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -402,6 +406,7 @@ _InitVarFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -440,6 +445,7 @@ _ClassVarFieldSpec = RuntimeRecord(
         _FieldKindProperty,
         _BindingShapeProperty,
         _CompareProperty,
+        _MutableProperty,
         _AnnotationProperty,
         _InitProperty,
         _HasDefaultProperty,
@@ -1109,6 +1115,7 @@ class PlainField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -1144,6 +1151,7 @@ class PlainField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -1181,6 +1189,7 @@ class PlainField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -1231,6 +1240,9 @@ class PlainField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -1349,6 +1361,7 @@ class PlainField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -1388,6 +1401,7 @@ class PlainField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -1441,6 +1455,7 @@ class InitVarField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -1476,6 +1491,7 @@ class InitVarField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -1513,6 +1529,7 @@ class InitVarField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -1563,6 +1580,9 @@ class InitVarField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -1681,6 +1701,7 @@ class InitVarField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -1720,6 +1741,7 @@ class InitVarField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -1773,6 +1795,7 @@ class ClassVarField:
         "field_kind",
         "binding_shape",
         "compare",
+        "mutable",
         "annotation",
         "init",
         "has_default",
@@ -1808,6 +1831,7 @@ class ClassVarField:
     field_kind: str
     binding_shape: str
     compare: str
+    mutable: bool
     annotation: object
     init: bool
     has_default: bool
@@ -1845,6 +1869,7 @@ class ClassVarField:
         field_kind: str = "field",
         binding_shape: str = "scalar",
         compare: str = "value",
+        mutable: bool = False,
         annotation: object = object,
         init: bool = True,
         has_default: bool = False,
@@ -1895,6 +1920,9 @@ class ClassVarField:
         if not isinstance(compare, str):
             raise TypeError("Compare must be str, got " + type(compare).__name__)
         object.__setattr__(self, "compare", compare)
+        if not isinstance(mutable, bool):
+            raise TypeError("Mutable must be bool, got " + type(mutable).__name__)
+        object.__setattr__(self, "mutable", mutable)
         object.__setattr__(self, "annotation", annotation)
         if not isinstance(init, bool):
             raise TypeError("Init must be bool, got " + type(init).__name__)
@@ -2013,6 +2041,7 @@ class ClassVarField:
             "field_kind",
             "binding_shape",
             "compare",
+            "mutable",
             "annotation",
             "init",
             "has_default",
@@ -2052,6 +2081,7 @@ class ClassVarField:
         pieces.append("field_kind=" + repr(self.field_kind))
         pieces.append("binding_shape=" + repr(self.binding_shape))
         pieces.append("compare=" + repr(self.compare))
+        pieces.append("mutable=" + repr(self.mutable))
         pieces.append("annotation=" + repr(self.annotation))
         pieces.append("init=" + repr(self.init))
         pieces.append("has_default=" + repr(self.has_default))
@@ -2308,6 +2338,7 @@ ASSEMBLY_PROPERTIES = {
         name="BindingShape", storage_name="binding_shape"
     ),
     "Compare": _YidlSimpleNamespace(name="Compare", storage_name="compare"),
+    "Mutable": _YidlSimpleNamespace(name="Mutable", storage_name="mutable"),
     "Annotation": _YidlSimpleNamespace(name="Annotation", storage_name="annotation"),
     "Init": _YidlSimpleNamespace(name="Init", storage_name="init"),
     "HasDefault": _YidlSimpleNamespace(name="HasDefault", storage_name="has_default"),
@@ -2468,7 +2499,7 @@ def build_lifecycle_class(decorated_cls, builder_params__astichi_param_hole__):
     astichi_hole(function_body)
     astichi_hole(return_statement)""",
         file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-        line_number=217,
+        line_number=219,
     ),
     "BuilderParam": astichi_template(
         from_astichi_code(
@@ -2476,7 +2507,7 @@ def build_lifecycle_class(decorated_cls, builder_params__astichi_param_hole__):
 def astichi_params(*, value_name__astichi_arg__):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=235,
+            line_number=237,
         )
     ),
     "TransactionManagerParam": astichi_template(
@@ -2485,14 +2516,14 @@ def astichi_params(*, value_name__astichi_arg__):
 def astichi_params(*, transaction_manager=None):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=240,
+            line_number=242,
         )
     ),
     "StateSlotEntry": astichi_template(
         from_astichi_code(
             "astichi_bind_external(slot_name)",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=245,
+            line_number=247,
         )
     ),
     "InitParamRequired": astichi_template(
@@ -2501,7 +2532,7 @@ def astichi_params(*, transaction_manager=None):
 def astichi_params(param_name__astichi_arg__: astichi_bind_external(annotation)):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=249,
+            line_number=251,
         )
     ),
     "InitParamDefault": astichi_template(
@@ -2513,7 +2544,7 @@ def astichi_params(
 ):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=254,
+            line_number=256,
         )
     ),
     "PlainStateAssignment": astichi_template(
@@ -2524,7 +2555,7 @@ astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = astich
     outer_bind=True,
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=262,
+            line_number=264,
         )
     ),
     "InitVarLocalDefaultAssignment": astichi_template(
@@ -2535,7 +2566,7 @@ init_value_name__astichi_arg__ = astichi_pass(
     outer_bind=True,
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=269,
+            line_number=271,
         )
     ),
     "PlainProperty": astichi_template(
@@ -2549,7 +2580,7 @@ def property_getter_name__astichi_arg__(self):
 def property_setter_name__astichi_arg__(self, value):
     self._y_state.astichi_ref(external=state_slot)._ = value""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=276,
+            line_number=278,
         )
     ),
     "ClassVarDefaultAssignment": astichi_template(
@@ -2560,7 +2591,7 @@ classvar_name__astichi_arg__ = astichi_pass(
     outer_bind=True,
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=286,
+            line_number=288,
         )
     ),
     "CommitOrderKeyBranch": astichi_template(
@@ -2573,7 +2604,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         return self._y_get_default_facade().astichi_ref(external=method_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=293,
+            line_number=295,
         )
     ),
     "RequiresValidationBranch": astichi_template(
@@ -2585,7 +2616,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         return True""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=302,
+            line_number=304,
         )
     ),
     "ValidateCommitBranch": astichi_template(
@@ -2600,7 +2631,7 @@ def astichi_elif():
         if result is False:
             return False""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=310,
+            line_number=312,
         )
     ),
     "TransactionHookCall": astichi_template(
@@ -2613,7 +2644,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         self._y_get_default_facade().astichi_ref(external=method_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=321,
+            line_number=323,
         )
     ),
     "CommitOrderKeyFallbackBranch": astichi_template(
@@ -2623,7 +2654,7 @@ def astichi_elif():
     if True:
         return ()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=330,
+            line_number=332,
         )
     ),
     "RequiresValidationFallbackBranch": astichi_template(
@@ -2633,7 +2664,7 @@ def astichi_elif():
     if True:
         return False""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=336,
+            line_number=338,
         )
     ),
     "ValidateCommitFallbackBranch": astichi_template(
@@ -2643,7 +2674,7 @@ def astichi_elif():
     if True:
         return True""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=342,
+            line_number=344,
         )
     ),
     "PassFallbackBranch": astichi_template(
@@ -2653,7 +2684,7 @@ def astichi_elif():
     if True:
         pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=348,
+            line_number=350,
         )
     ),
     "ClassBundle": astichi_template(
@@ -2982,7 +3013,7 @@ class working_facade_class_decl_name__astichi_arg__(
     with astichi_hole(working_facade_properties) as astichi_fallback:
         pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=354,
+            line_number=356,
             keep_names=(
                 "DEFAULT_TRANSACTION",
                 "TransactionManager",
@@ -3009,7 +3040,7 @@ return_class_module_ref__astichi_arg__.__module__ = astichi_pass(
 ).__module__
 return return_class_result_ref__astichi_arg__""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=682,
+            line_number=684,
         )
     ),
 }

@@ -10,9 +10,11 @@ from yidl_lifecycle.lifecycle import classvar
 from yidl_lifecycle.lifecycle import field
 from yidl_lifecycle.lifecycle import harvest_lifecycle_definition
 from yidl_lifecycle.lifecycle import initvar
+from yidl_lifecycle.lifecycle import lazy
 from yidl_lifecycle.lifecycle import managed
 from yidl_lifecycle.lifecycle import owned
 from yidl_lifecycle.lifecycle import normalize_marker
+from yidl_lifecycle.lifecycle import static
 from yidl_lifecycle.lifecycle import transient
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 
@@ -68,6 +70,27 @@ def test_classvar_marker_normalizes_as_non_init() -> None:
     assert decl.init is False
     assert decl.has_default is True
     assert decl.default == "counter"
+
+
+def test_static_is_compatibility_alias_for_lazy() -> None:
+    assert static is lazy
+    decl = normalize_marker("token", int, lazy(default=7))
+
+    assert decl.kind == "static"
+    assert decl.default == 7
+    assert decl.mutable is False
+
+
+def test_lazy_marker_preserves_mutable_policy() -> None:
+    decl = normalize_marker("token", int, lazy(default=7, mutable=True))
+
+    assert decl.kind == "static"
+    assert decl.mutable is True
+
+
+def test_lazy_marker_rejects_non_bool_mutable() -> None:
+    with pytest.raises(LifecycleDefinitionError, match="mutable must be a bool"):
+        lazy(mutable=1)  # type: ignore[arg-type]
 
 
 def test_managed_marker_defaults_to_default_transaction() -> None:
