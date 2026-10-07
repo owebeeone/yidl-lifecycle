@@ -61,16 +61,18 @@ Run the full test suite in the current environment:
 PYTHONPATH=../astichi/src uv run pytest -q
 ```
 
-Run tests through the versioned harness for one Python version:
+Run golden tests with one Python version:
 
 ```bash
-PYTHONPATH=../astichi/src uv run python -m yidl.testing.versioned_test_harness run-tests --python 3.13 --pytest-args tests/test_yidl_goldens.py -q
+PYTHONPATH=../astichi/src uv run --python 3.13 pytest tests/test_yidl_goldens.py -q
 ```
 
-Run tests for every configured Python version:
+Run golden tests for every configured Python version:
 
 ```bash
-PYTHONPATH=../astichi/src uv run python -m yidl.testing.versioned_test_harness run-tests-all --pytest-args tests/test_yidl_goldens.py -q
+for version in 3.12 3.13 3.14; do
+    PYTHONPATH=../astichi/src uv run --python "$version" pytest tests/test_yidl_goldens.py -q || exit "$?"
+done
 ```
 
 The configured version matrix lives in `pyproject.toml` under
@@ -81,28 +83,42 @@ The configured version matrix lives in `pyproject.toml` under
 Regenerate all checked-in golden outputs:
 
 ```bash
-PYTHONPATH=../astichi/src uv run python -m yidl.testing.versioned_test_harness regen-goldens
+PYTHONPATH=../astichi/src uv run python - <<'PY'
+from pathlib import Path
+from yidl.testing.versioned_test_harness import write_golden_outputs
+
+write_golden_outputs(Path.cwd())
+PY
 ```
 
 Regenerate all goldens with a specific Python version:
 
 ```bash
-PYTHONPATH=../astichi/src uv run python -m yidl.testing.versioned_test_harness regen-goldens --python 3.13
+PYTHONPATH=../astichi/src uv run --python 3.13 python - <<'PY'
+from pathlib import Path
+from yidl.testing.versioned_test_harness import write_golden_outputs
+
+write_golden_outputs(Path.cwd())
+PY
 ```
 
-Regenerate one single-source golden:
+The shared API receives this repository root explicitly. Running the generic
+`python -m yidl.testing.versioned_test_harness` CLI instead selects the YIDL
+repository, not `yidl-lifecycle`.
+
+Regenerate one multi-source golden:
 
 ```bash
-PYTHONPATH=../astichi/src uv run python tests/data/gold_src/yidl_transactional_phase_h_owned.py tests/data/goldens/materialized/yidl_transactional_phase_h_owned.py
+PYTHONPATH=../astichi/src uv run python tests/data/gold_src/yidl_transactional_phase_h_owned.py tests/data/goldens/materialized/yidl_transactional_phase_h_owned
 ```
 
-Regenerate a single multi-source golden:
+Regenerate the completion-failure golden:
 
 ```bash
-PYTHONPATH=../astichi/src uv run python tests/data/gold_src/yidl_update_a_dataclasses_split.py tests/data/goldens/materialized/yidl_update_a_dataclasses_split
+PYTHONPATH=../astichi/src uv run python tests/data/gold_src/yidl_transactional_completion_failures.py tests/data/goldens/materialized/yidl_transactional_completion_failures
 ```
 
-Prefer full `regen-goldens` before committing broad compiler or runtime
+Prefer full regeneration before committing broad compiler or runtime
 changes. Single-case regeneration is useful while iterating, but it does not
 remove stale outputs for deleted or renamed fixtures.
 

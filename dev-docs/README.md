@@ -20,8 +20,15 @@ YIDL and Astichi repositories.
 
 [Pyrolyze's accepted L0 completion contract](../../pyrolyze/dev-docs/PytoLifecyleIntegSC3-L0Plan.md)
 is the next bounded manager/generated-library prerequisite. Its design is
-accepted, but implementation and consumer adoption are not. Read that contract
+accepted; the L0-1/L0-2 implementation candidate provides completion evidence,
+candidate-write guards, and independently drained generated after hooks.
+Implementation acceptance and consumer adoption are still pending. Read that
+contract and [completion behavior](TransactionScopeOwnership.md#terminal-completion-evidence)
 before relying on stronger cleanup or publication evidence.
+
+[L0 verification](L0CompletionVerification.md) records the current checks,
+the pre-existing Python-backend owned-field snapshot difference, and the
+implementation-review gate. Passing tests alone do not accept the checkpoint.
 
 [The API proposal](ManagedContextApiProposal.md) records design direction and
 unresolved options, not a second decorator API. Its review is archived; later

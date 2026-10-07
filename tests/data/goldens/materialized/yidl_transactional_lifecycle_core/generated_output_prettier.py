@@ -88,6 +88,7 @@ def build_lifecycle_class(
                         "stale yidl working value without an active transaction"
                     )
                 raise RuntimeError("writes require an active yidl transaction")
+            self._y_transaction_manager._require_candidate_write(self, tx_key)
             existing_tx_id = self._y_working_tx_ids[tx_index]
             if existing_tx_id is not None and existing_tx_id != transaction.tx_id:
                 raise RuntimeError(
@@ -129,10 +130,13 @@ def build_lifecycle_class(
             tx_index = self.__yidl_tx_key_to_index__[tx_key]
             if self._y_working_tx_ids[tx_index] != tx_token:
                 raise RuntimeError("stale yidl transaction token")
-            if False:
-                pass
-            elif True:
-                pass
+            with self._y_transaction_manager._before_commit_hooks(
+                self, tx_key, tx_token
+            ):
+                if False:
+                    pass
+                elif True:
+                    pass
             if False:
                 pass
             elif True:
@@ -156,10 +160,15 @@ def build_lifecycle_class(
         def _after_commit_tx_by_key(self, tx_key=DEFAULT_TRANSACTION, tx_token=None):
             del tx_token
             tx_index = self.__yidl_tx_key_to_index__[tx_key]
+            failures = []
             if False:
                 pass
             elif True:
                 pass
+            if len(failures) == 1:
+                raise failures[0]
+            if failures:
+                raise BaseExceptionGroup("yidl after-commit hooks failed", failures)
             return self._y_get_default_facade()
 
         def _rollback_tx_by_key(self, tx_key=DEFAULT_TRANSACTION, tx_token=None):
@@ -176,10 +185,15 @@ def build_lifecycle_class(
         def _after_rollback_tx_by_key(self, tx_key=DEFAULT_TRANSACTION, tx_token=None):
             del tx_token
             tx_index = self.__yidl_tx_key_to_index__[tx_key]
+            failures = []
             if False:
                 pass
             elif True:
                 pass
+            if len(failures) == 1:
+                raise failures[0]
+            if failures:
+                raise BaseExceptionGroup("yidl after-rollback hooks failed", failures)
             return self._y_get_default_facade()
 
         pass

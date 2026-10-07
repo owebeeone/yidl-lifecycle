@@ -125,6 +125,7 @@ def build_lifecycle_class(
                         "stale yidl working value without an active transaction"
                     )
                 raise RuntimeError("writes require an active yidl transaction")
+            self._y_transaction_manager._require_candidate_write(self, tx_key)
             existing_tx_id = self._y_working_tx_ids[tx_index]
             if existing_tx_id is not None and existing_tx_id != transaction.tx_id:
                 raise RuntimeError(
@@ -172,12 +173,15 @@ def build_lifecycle_class(
             tx_index = self.__yidl_tx_key_to_index__[tx_key]
             if self._y_working_tx_ids[tx_index] != tx_token:
                 raise RuntimeError("stale yidl transaction token")
-            if False:
-                pass
-            elif tx_index == 0:
-                self._before_commit_tx_0()
-            elif True:
-                pass
+            with self._y_transaction_manager._before_commit_hooks(
+                self, tx_key, tx_token
+            ):
+                if False:
+                    pass
+                elif tx_index == 0:
+                    self._before_commit_tx_0()
+                elif True:
+                    pass
             if False:
                 pass
             elif tx_index == 0:
@@ -204,12 +208,17 @@ def build_lifecycle_class(
         def _after_commit_tx_by_key(self, tx_key=DEFAULT_TRANSACTION, tx_token=None):
             del tx_token
             tx_index = self.__yidl_tx_key_to_index__[tx_key]
+            failures = []
             if False:
                 pass
             elif tx_index == 0:
                 self._after_commit_tx_0()
             elif True:
                 pass
+            if len(failures) == 1:
+                raise failures[0]
+            if failures:
+                raise BaseExceptionGroup("yidl after-commit hooks failed", failures)
             return self._y_get_default_facade()
 
         def _rollback_tx_by_key(self, tx_key=DEFAULT_TRANSACTION, tx_token=None):
@@ -227,12 +236,17 @@ def build_lifecycle_class(
         def _after_rollback_tx_by_key(self, tx_key=DEFAULT_TRANSACTION, tx_token=None):
             del tx_token
             tx_index = self.__yidl_tx_key_to_index__[tx_key]
+            failures = []
             if False:
                 pass
             elif tx_index == 0:
                 self._after_rollback_tx_0()
             elif True:
                 pass
+            if len(failures) == 1:
+                raise failures[0]
+            if failures:
+                raise BaseExceptionGroup("yidl after-rollback hooks failed", failures)
             return self._y_get_default_facade()
 
         def _commit_order_key_tx_0(self):
@@ -248,7 +262,11 @@ def build_lifecycle_class(
             pass
 
         def _after_commit_tx_0(self):
-            pass
+            failures = []
+            if len(failures) == 1:
+                raise failures[0]
+            if failures:
+                raise BaseExceptionGroup("yidl after-commit hooks failed", failures)
 
         def _apply_prepared_commit_tx_0_fields(self):
             if self._y_plain_staged is not VOID:
@@ -273,7 +291,11 @@ def build_lifecycle_class(
                 self._y_v2_staged = self._y_v2_working
 
         def _after_rollback_tx_0(self):
-            pass
+            failures = []
+            if len(failures) == 1:
+                raise failures[0]
+            if failures:
+                raise BaseExceptionGroup("yidl after-rollback hooks failed", failures)
 
         def _rollback_tx_0_fields(self):
             self._y_plain_staged = VOID

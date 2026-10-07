@@ -465,14 +465,24 @@ concept LifecycleManaged extends core.LifecycleCore {
 
     resource AfterCommitFunction = template $[
         def after_commit_function_name__astichi_arg__(self):
+            failures = []
             with astichi_hole(after_commit_tx_body) as astichi_fallback:
                 pass
+            if len(failures) == 1:
+                raise failures[0]
+            if failures:
+                raise BaseExceptionGroup("yidl after-commit hooks failed", failures)
     ]$
 
     resource AfterRollbackFunction = template $[
         def after_rollback_function_name__astichi_arg__(self):
+            failures = []
             with astichi_hole(after_rollback_tx_body) as astichi_fallback:
                 pass
+            if len(failures) == 1:
+                raise failures[0]
+            if failures:
+                raise BaseExceptionGroup("yidl after-rollback hooks failed", failures)
     ]$
 
     resource CommitOrderKeyHelperCall = template $[
@@ -500,6 +510,15 @@ concept LifecycleManaged extends core.LifecycleCore {
             self,
             outer_bind=True,
         )._y_get_default_facade().astichi_ref(external=method_name)()
+    ]$
+
+    resource AfterTransactionHookHelperCall = template $[
+        astichi_import(failures)
+        try:
+            astichi_pass(self, outer_bind=True)._y_get_default_facade().astichi_ref(external=method_name)()
+        except BaseException as error:
+            error.add_note(astichi_bind_external(method_name))
+            failures.append(error)
     ]$
 
     resource CommitOrderKeyDispatchCall = template $[
@@ -1106,7 +1125,7 @@ concept LifecycleManaged extends core.LifecycleCore {
         external method_name = MethodName
     }
 
-    contribution AfterCommitHelperMethodCall = TransactionHookHelperCall {
+    contribution AfterCommitHelperMethodCall = AfterTransactionHookHelperCall {
         as AfterCommitHelperMethodCall
         index DeclarationOrder
         order DeclarationOrder
@@ -1118,7 +1137,7 @@ concept LifecycleManaged extends core.LifecycleCore {
         external method_name = MethodName
     }
 
-    contribution AfterRollbackHelperMethodCall = TransactionHookHelperCall {
+    contribution AfterRollbackHelperMethodCall = AfterTransactionHookHelperCall {
         as AfterRollbackHelperMethodCall
         index DeclarationOrder
         order DeclarationOrder

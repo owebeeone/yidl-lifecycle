@@ -7612,6 +7612,24 @@ def astichi_elif():
             line_number=323,
         )
     ),
+    "AfterTransactionHookCall": astichi_template(
+        from_astichi_code(
+            """\
+def astichi_elif():
+    astichi_import(tx_index)
+    astichi_import(self)
+    astichi_import(failures)
+
+    if tx_index == astichi_bind_external(tx_index_value):
+        try:
+            self._y_get_default_facade().astichi_ref(external=method_name)()
+        except BaseException as error:
+            error.add_note(astichi_bind_external(method_name))
+            failures.append(error)""",
+            file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
+            line_number=332,
+        )
+    ),
     "CommitOrderKeyFallbackBranch": astichi_template(
         from_astichi_code(
             """\
@@ -7619,7 +7637,7 @@ def astichi_elif():
     if True:
         return ()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=332,
+            line_number=346,
         )
     ),
     "RequiresValidationFallbackBranch": astichi_template(
@@ -7629,7 +7647,7 @@ def astichi_elif():
     if True:
         return False""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=338,
+            line_number=352,
         )
     ),
     "ValidateCommitFallbackBranch": astichi_template(
@@ -7639,7 +7657,7 @@ def astichi_elif():
     if True:
         return True""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=344,
+            line_number=358,
         )
     ),
     "PassFallbackBranch": astichi_template(
@@ -7649,7 +7667,7 @@ def astichi_elif():
     if True:
         pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=350,
+            line_number=364,
         )
     ),
     "ClassBundle": astichi_template(
@@ -7730,6 +7748,7 @@ class state_class_decl_name__astichi_arg__:
                     "stale yidl working value without an active transaction"
                 )
             raise RuntimeError("writes require an active yidl transaction")
+        self._y_transaction_manager._require_candidate_write(self, tx_key)
         existing_tx_id = self._y_working_tx_ids[tx_index]
         if existing_tx_id is not None and existing_tx_id != transaction.tx_id:
             raise RuntimeError(
@@ -7771,10 +7790,11 @@ class state_class_decl_name__astichi_arg__:
         tx_index = self.__yidl_tx_key_to_index__[tx_key]
         if self._y_working_tx_ids[tx_index] != tx_token:
             raise RuntimeError("stale yidl transaction token")
-        if False:
-            pass
-        elif astichi_elif(before_commit_body):
-            pass
+        with self._y_transaction_manager._before_commit_hooks(self, tx_key, tx_token):
+            if False:
+                pass
+            elif astichi_elif(before_commit_body):
+                pass
         if False:
             pass
         elif astichi_elif(prepare_commit_transaction_dispatch_body):
@@ -7797,10 +7817,15 @@ class state_class_decl_name__astichi_arg__:
     def _after_commit_tx_by_key(self, tx_key=DEFAULT_TRANSACTION, tx_token=None):
         del tx_token
         tx_index = self.__yidl_tx_key_to_index__[tx_key]
+        failures = []
         if False:
             pass
         elif astichi_elif(after_commit_body):
             pass
+        if len(failures) == 1:
+            raise failures[0]
+        if failures:
+            raise BaseExceptionGroup("yidl after-commit hooks failed", failures)
         return self._y_get_default_facade()
 
     def _rollback_tx_by_key(self, tx_key=DEFAULT_TRANSACTION, tx_token=None):
@@ -7818,10 +7843,15 @@ class state_class_decl_name__astichi_arg__:
     def _after_rollback_tx_by_key(self, tx_key=DEFAULT_TRANSACTION, tx_token=None):
         del tx_token
         tx_index = self.__yidl_tx_key_to_index__[tx_key]
+        failures = []
         if False:
             pass
         elif astichi_elif(after_rollback_body):
             pass
+        if len(failures) == 1:
+            raise failures[0]
+        if failures:
+            raise BaseExceptionGroup("yidl after-rollback hooks failed", failures)
         return self._y_get_default_facade()
 
     with astichi_hole(commit_transaction_helpers) as astichi_fallback:
@@ -7978,7 +8008,7 @@ class working_facade_class_decl_name__astichi_arg__(
     with astichi_hole(working_facade_properties) as astichi_fallback:
         pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=356,
+            line_number=370,
             keep_names=(
                 "DEFAULT_TRANSACTION",
                 "TransactionManager",
@@ -8005,7 +8035,7 @@ return_class_module_ref__astichi_arg__.__module__ = astichi_pass(
 ).__module__
 return return_class_result_ref__astichi_arg__""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=684,
+            line_number=710,
         )
     ),
     "BuildTransactionFactsBody": from_astichi_code(
@@ -8458,8 +8488,13 @@ def before_commit_function_name__astichi_arg__(self):
         from_astichi_code(
             """\
 def after_commit_function_name__astichi_arg__(self):
+    failures = []
     with astichi_hole(after_commit_tx_body) as astichi_fallback:
-        pass""",
+        pass
+    if len(failures) == 1:
+        raise failures[0]
+    if failures:
+        raise BaseExceptionGroup("yidl after-commit hooks failed", failures)""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
             line_number=467,
         )
@@ -8468,10 +8503,15 @@ def after_commit_function_name__astichi_arg__(self):
         from_astichi_code(
             """\
 def after_rollback_function_name__astichi_arg__(self):
+    failures = []
     with astichi_hole(after_rollback_tx_body) as astichi_fallback:
-        pass""",
+        pass
+    if len(failures) == 1:
+        raise failures[0]
+    if failures:
+        raise BaseExceptionGroup("yidl after-rollback hooks failed", failures)""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=473,
+            line_number=478,
         )
     ),
     "CommitOrderKeyHelperCall": astichi_template(
@@ -8482,14 +8522,14 @@ return astichi_pass(
     outer_bind=True,
 )._y_get_default_facade().astichi_ref(external=method_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=479,
+            line_number=489,
         )
     ),
     "RequiresValidationHelperCall": astichi_template(
         from_astichi_code(
             "return True",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=486,
+            line_number=496,
         )
     ),
     "ValidateCommitHelperCall": astichi_template(
@@ -8502,7 +8542,7 @@ result = astichi_pass(
 if not result:
     return result""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=490,
+            line_number=500,
         )
     ),
     "TransactionHookHelperCall": astichi_template(
@@ -8513,7 +8553,20 @@ astichi_pass(
     outer_bind=True,
 )._y_get_default_facade().astichi_ref(external=method_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=499,
+            line_number=509,
+        )
+    ),
+    "AfterTransactionHookHelperCall": astichi_template(
+        from_astichi_code(
+            """\
+astichi_import(failures)
+try:
+    astichi_pass(self, outer_bind=True)._y_get_default_facade().astichi_ref(external=method_name)()
+except BaseException as error:
+    error.add_note(astichi_bind_external(method_name))
+    failures.append(error)""",
+            file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
+            line_number=516,
         )
     ),
     "CommitOrderKeyDispatchCall": astichi_template(
@@ -8526,7 +8579,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         return self.astichi_ref(external=commit_order_key_function_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=506,
+            line_number=525,
         )
     ),
     "RequiresValidationDispatchCall": astichi_template(
@@ -8539,7 +8592,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         return self.astichi_ref(external=requires_validation_function_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=515,
+            line_number=534,
         )
     ),
     "ValidateCommitDispatchCall": astichi_template(
@@ -8552,7 +8605,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         return self.astichi_ref(external=validate_commit_function_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=524,
+            line_number=543,
         )
     ),
     "BeforeCommitDispatchCall": astichi_template(
@@ -8565,7 +8618,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         self.astichi_ref(external=before_commit_function_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=533,
+            line_number=552,
         )
     ),
     "AfterCommitDispatchCall": astichi_template(
@@ -8578,7 +8631,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         self.astichi_ref(external=after_commit_function_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=542,
+            line_number=561,
         )
     ),
     "AfterRollbackDispatchCall": astichi_template(
@@ -8591,7 +8644,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         self.astichi_ref(external=after_rollback_function_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=551,
+            line_number=570,
         )
     ),
     "PrepareCommitFieldsFunction": astichi_template(
@@ -8601,7 +8654,7 @@ def prepare_commit_fields_function_name__astichi_arg__(self):
     with astichi_hole(prepare_commit_fields_body) as astichi_fallback:
         pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=560,
+            line_number=579,
         )
     ),
     "ApplyPreparedCommitFieldsFunction": astichi_template(
@@ -8611,7 +8664,7 @@ def apply_prepared_commit_fields_function_name__astichi_arg__(self):
     with astichi_hole(apply_prepared_commit_fields_body) as astichi_fallback:
         pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=566,
+            line_number=585,
         )
     ),
     "RollbackFieldsFunction": astichi_template(
@@ -8621,7 +8674,7 @@ def rollback_fields_function_name__astichi_arg__(self):
     with astichi_hole(rollback_fields_body) as astichi_fallback:
         pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=572,
+            line_number=591,
         )
     ),
     "ApplyPreparedCommitDispatchBranch": astichi_template(
@@ -8634,7 +8687,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         self.astichi_ref(external=apply_prepared_commit_fields_function_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=578,
+            line_number=597,
         )
     ),
     "PrepareCommitDispatchBranch": astichi_template(
@@ -8647,7 +8700,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         self.astichi_ref(external=prepare_commit_fields_function_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=587,
+            line_number=606,
         )
     ),
     "RollbackDispatchBranch": astichi_template(
@@ -8660,7 +8713,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         self.astichi_ref(external=rollback_fields_function_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_managed.yidl",
-            line_number=596,
+            line_number=615,
         )
     ),
     "BuildDefaultFactoryFactsBody": from_astichi_code(
@@ -10832,7 +10885,7 @@ ASSEMBLY_CONTRIBUTIONS = {
     ),
     "AfterCommitHookContribution": ContributionSpec(
         name="AfterCommitHookContribution",
-        source_name="TransactionHookCall",
+        source_name="AfterTransactionHookCall",
         source_kind="resource",
         build_name="AfterCommitHook",
         index=ValueRef("DeclarationOrder"),
@@ -10861,7 +10914,7 @@ ASSEMBLY_CONTRIBUTIONS = {
     ),
     "AfterRollbackHookContribution": ContributionSpec(
         name="AfterRollbackHookContribution",
-        source_name="TransactionHookCall",
+        source_name="AfterTransactionHookCall",
         source_kind="resource",
         build_name="AfterRollbackHook",
         index=ValueRef("DeclarationOrder"),
@@ -12134,7 +12187,7 @@ ASSEMBLY_CONTRIBUTIONS = {
     ),
     "AfterCommitHelperMethodCall": ContributionSpec(
         name="AfterCommitHelperMethodCall",
-        source_name="TransactionHookHelperCall",
+        source_name="AfterTransactionHookHelperCall",
         source_kind="resource",
         build_name="AfterCommitHelperMethodCall",
         index=ValueRef("DeclarationOrder"),
@@ -12165,7 +12218,7 @@ ASSEMBLY_CONTRIBUTIONS = {
     ),
     "AfterRollbackHelperMethodCall": ContributionSpec(
         name="AfterRollbackHelperMethodCall",
-        source_name="TransactionHookHelperCall",
+        source_name="AfterTransactionHookHelperCall",
         source_kind="resource",
         build_name="AfterRollbackHelperMethodCall",
         index=ValueRef("DeclarationOrder"),
