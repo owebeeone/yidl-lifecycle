@@ -3174,20 +3174,23 @@ def astichi_elif():
         try:
             self._y_get_default_facade().astichi_ref(external=method_name)()
         except BaseException as error:
-            error.add_note(astichi_bind_external(method_name))
-            failures.append(error)""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=332)), 'CommitOrderKeyFallbackBranch': astichi_template(from_astichi_code("""\
+            failures.append(error)
+            try:
+                BaseException.add_note(error, astichi_bind_external(method_name))
+            except BaseException:
+                pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=332)), 'CommitOrderKeyFallbackBranch': astichi_template(from_astichi_code("""\
 def astichi_elif():
     if True:
-        return ()""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=346)), 'RequiresValidationFallbackBranch': astichi_template(from_astichi_code("""\
+        return ()""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=349)), 'RequiresValidationFallbackBranch': astichi_template(from_astichi_code("""\
 def astichi_elif():
     if True:
-        return False""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=352)), 'ValidateCommitFallbackBranch': astichi_template(from_astichi_code("""\
+        return False""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=355)), 'ValidateCommitFallbackBranch': astichi_template(from_astichi_code("""\
 def astichi_elif():
     if True:
-        return True""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=358)), 'PassFallbackBranch': astichi_template(from_astichi_code("""\
+        return True""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=361)), 'PassFallbackBranch': astichi_template(from_astichi_code("""\
 def astichi_elif():
     if True:
-        pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=364)), 'ClassBundle': astichi_template(from_astichi_code("""\
+        pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=367)), 'ClassBundle': astichi_template(from_astichi_code("""\
 class state_class_decl_name__astichi_arg__:
     __slots__ = (
         "_y_transaction_manager",
@@ -3521,7 +3524,7 @@ class working_facade_class_decl_name__astichi_arg__(
 ):
     __slots__ = ()
     with astichi_hole(working_facade_properties) as astichi_fallback:
-        pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=370, keep_names=('DEFAULT_TRANSACTION', 'TransactionManager', 'VOID', 'weakref', '_HAS_DEFAULT_FACTORY'))), 'ReturnClass': astichi_template(from_astichi_code("""\
+        pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=373, keep_names=('DEFAULT_TRANSACTION', 'TransactionManager', 'VOID', 'weakref', '_HAS_DEFAULT_FACTORY'))), 'ReturnClass': astichi_template(from_astichi_code("""\
 return_class_name_ref__astichi_arg__.__name__ = astichi_pass(
     decorated_cls,
     outer_bind=True,
@@ -3534,7 +3537,7 @@ return_class_module_ref__astichi_arg__.__module__ = astichi_pass(
     decorated_cls,
     outer_bind=True,
 ).__module__
-return return_class_result_ref__astichi_arg__""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=710)), 'BuildTransactionFactsBody': from_astichi_code("""\
+return return_class_result_ref__astichi_arg__""", file_name='src/yidl_lifecycle/yidl/lifecycle_core.yidl', line_number=713)), 'BuildTransactionFactsBody': from_astichi_code("""\
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 
 classes = sorted(
@@ -3861,71 +3864,74 @@ astichi_import(failures)
 try:
     astichi_pass(self, outer_bind=True)._y_get_default_facade().astichi_ref(external=method_name)()
 except BaseException as error:
-    error.add_note(astichi_bind_external(method_name))
-    failures.append(error)""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=516)), 'CommitOrderKeyDispatchCall': astichi_template(from_astichi_code("""\
+    failures.append(error)
+    try:
+        BaseException.add_note(error, astichi_bind_external(method_name))
+    except BaseException:
+        pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=516)), 'CommitOrderKeyDispatchCall': astichi_template(from_astichi_code("""\
 def astichi_elif():
     astichi_import(tx_index)
     astichi_import(self)
 
     if tx_index == astichi_bind_external(tx_index_value):
-        return self.astichi_ref(external=commit_order_key_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=525)), 'RequiresValidationDispatchCall': astichi_template(from_astichi_code("""\
+        return self.astichi_ref(external=commit_order_key_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=528)), 'RequiresValidationDispatchCall': astichi_template(from_astichi_code("""\
 def astichi_elif():
     astichi_import(tx_index)
     astichi_import(self)
 
     if tx_index == astichi_bind_external(tx_index_value):
-        return self.astichi_ref(external=requires_validation_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=534)), 'ValidateCommitDispatchCall': astichi_template(from_astichi_code("""\
+        return self.astichi_ref(external=requires_validation_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=537)), 'ValidateCommitDispatchCall': astichi_template(from_astichi_code("""\
 def astichi_elif():
     astichi_import(tx_index)
     astichi_import(self)
 
     if tx_index == astichi_bind_external(tx_index_value):
-        return self.astichi_ref(external=validate_commit_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=543)), 'BeforeCommitDispatchCall': astichi_template(from_astichi_code("""\
+        return self.astichi_ref(external=validate_commit_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=546)), 'BeforeCommitDispatchCall': astichi_template(from_astichi_code("""\
 def astichi_elif():
     astichi_import(tx_index)
     astichi_import(self)
 
     if tx_index == astichi_bind_external(tx_index_value):
-        self.astichi_ref(external=before_commit_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=552)), 'AfterCommitDispatchCall': astichi_template(from_astichi_code("""\
+        self.astichi_ref(external=before_commit_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=555)), 'AfterCommitDispatchCall': astichi_template(from_astichi_code("""\
 def astichi_elif():
     astichi_import(tx_index)
     astichi_import(self)
 
     if tx_index == astichi_bind_external(tx_index_value):
-        self.astichi_ref(external=after_commit_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=561)), 'AfterRollbackDispatchCall': astichi_template(from_astichi_code("""\
+        self.astichi_ref(external=after_commit_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=564)), 'AfterRollbackDispatchCall': astichi_template(from_astichi_code("""\
 def astichi_elif():
     astichi_import(tx_index)
     astichi_import(self)
 
     if tx_index == astichi_bind_external(tx_index_value):
-        self.astichi_ref(external=after_rollback_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=570)), 'PrepareCommitFieldsFunction': astichi_template(from_astichi_code("""\
+        self.astichi_ref(external=after_rollback_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=573)), 'PrepareCommitFieldsFunction': astichi_template(from_astichi_code("""\
 def prepare_commit_fields_function_name__astichi_arg__(self):
     with astichi_hole(prepare_commit_fields_body) as astichi_fallback:
-        pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=579)), 'ApplyPreparedCommitFieldsFunction': astichi_template(from_astichi_code("""\
+        pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=582)), 'ApplyPreparedCommitFieldsFunction': astichi_template(from_astichi_code("""\
 def apply_prepared_commit_fields_function_name__astichi_arg__(self):
     with astichi_hole(apply_prepared_commit_fields_body) as astichi_fallback:
-        pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=585)), 'RollbackFieldsFunction': astichi_template(from_astichi_code("""\
+        pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=588)), 'RollbackFieldsFunction': astichi_template(from_astichi_code("""\
 def rollback_fields_function_name__astichi_arg__(self):
     with astichi_hole(rollback_fields_body) as astichi_fallback:
-        pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=591)), 'ApplyPreparedCommitDispatchBranch': astichi_template(from_astichi_code("""\
+        pass""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=594)), 'ApplyPreparedCommitDispatchBranch': astichi_template(from_astichi_code("""\
 def astichi_elif():
     astichi_import(tx_index)
     astichi_import(self)
 
     if tx_index == astichi_bind_external(tx_index_value):
-        self.astichi_ref(external=apply_prepared_commit_fields_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=597)), 'PrepareCommitDispatchBranch': astichi_template(from_astichi_code("""\
+        self.astichi_ref(external=apply_prepared_commit_fields_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=600)), 'PrepareCommitDispatchBranch': astichi_template(from_astichi_code("""\
 def astichi_elif():
     astichi_import(tx_index)
     astichi_import(self)
 
     if tx_index == astichi_bind_external(tx_index_value):
-        self.astichi_ref(external=prepare_commit_fields_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=606)), 'RollbackDispatchBranch': astichi_template(from_astichi_code("""\
+        self.astichi_ref(external=prepare_commit_fields_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=609)), 'RollbackDispatchBranch': astichi_template(from_astichi_code("""\
 def astichi_elif():
     astichi_import(tx_index)
     astichi_import(self)
 
     if tx_index == astichi_bind_external(tx_index_value):
-        self.astichi_ref(external=rollback_fields_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=615)), 'BuildDefaultFactoryFactsBody': from_astichi_code("""\
+        self.astichi_ref(external=rollback_fields_function_name)()""", file_name='src/yidl_lifecycle/yidl/lifecycle_managed.yidl', line_number=618)), 'BuildDefaultFactoryFactsBody': from_astichi_code("""\
 classes = sorted(
     ctx.records(ClassesCollection),
     key=lambda item: item.class_order,

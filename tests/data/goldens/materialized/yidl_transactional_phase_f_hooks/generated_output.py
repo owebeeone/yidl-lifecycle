@@ -230,8 +230,11 @@ def build_lifecycle_class(decorated_cls, *, _Counter_lifecycle_definition, _Coun
             try:
                 self._y_get_default_facade()._after_default()
             except BaseException as error:
-                error.add_note('_after_default')
                 failures.append(error)
+                try:
+                    BaseException.add_note(error, '_after_default')
+                except BaseException:
+                    pass
             if len(failures) == 1:
                 raise failures[0]
             if failures:
@@ -308,8 +311,11 @@ def build_lifecycle_class(decorated_cls, *, _Counter_lifecycle_definition, _Coun
             try:
                 self._y_get_default_facade()._after_audit_rollback()
             except BaseException as error:
-                error.add_note('_after_audit_rollback')
                 failures.append(error)
+                try:
+                    BaseException.add_note(error, '_after_audit_rollback')
+                except BaseException:
+                    pass
             if len(failures) == 1:
                 raise failures[0]
             if failures:

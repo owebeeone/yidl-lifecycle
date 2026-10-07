@@ -306,13 +306,19 @@ def build_lifecycle_class(
             try:
                 self._y_get_default_facade()._parent_after_commit()
             except BaseException as error:
-                error.add_note("_parent_after_commit")
                 failures.append(error)
+                try:
+                    BaseException.add_note(error, "_parent_after_commit")
+                except BaseException:
+                    pass
             try:
                 self._y_get_default_facade()._child_after_commit()
             except BaseException as error:
-                error.add_note("_child_after_commit")
                 failures.append(error)
+                try:
+                    BaseException.add_note(error, "_child_after_commit")
+                except BaseException:
+                    pass
             if len(failures) == 1:
                 raise failures[0]
             if failures:
@@ -388,13 +394,19 @@ def build_lifecycle_class(
             try:
                 self._y_get_default_facade()._parent_after_rollback()
             except BaseException as error:
-                error.add_note("_parent_after_rollback")
                 failures.append(error)
+                try:
+                    BaseException.add_note(error, "_parent_after_rollback")
+                except BaseException:
+                    pass
             try:
                 self._y_get_default_facade()._child_after_rollback()
             except BaseException as error:
-                error.add_note("_child_after_rollback")
                 failures.append(error)
+                try:
+                    BaseException.add_note(error, "_child_after_rollback")
+                except BaseException:
+                    pass
             if len(failures) == 1:
                 raise failures[0]
             if failures:

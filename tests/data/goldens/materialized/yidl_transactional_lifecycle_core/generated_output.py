@@ -125,6 +125,15 @@ def build_lifecycle_class(decorated_cls, *, _Counter_lifecycle_definition, _Coun
             failures = []
             if False:
                 pass
+            elif tx_index == 0:
+                try:
+                    self._y_get_default_facade()._after_finish()
+                except BaseException as error:
+                    failures.append(error)
+                    try:
+                        BaseException.add_note(error, '_after_finish')
+                    except BaseException:
+                        pass
             elif True:
                 pass
             if len(failures) == 1:
@@ -150,6 +159,15 @@ def build_lifecycle_class(decorated_cls, *, _Counter_lifecycle_definition, _Coun
             failures = []
             if False:
                 pass
+            elif tx_index == 0:
+                try:
+                    self._y_get_default_facade()._after_finish()
+                except BaseException as error:
+                    failures.append(error)
+                    try:
+                        BaseException.add_note(error, '_after_finish')
+                    except BaseException:
+                        pass
             elif True:
                 pass
             if len(failures) == 1:

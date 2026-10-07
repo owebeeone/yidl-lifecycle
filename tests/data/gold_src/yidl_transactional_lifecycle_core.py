@@ -11,7 +11,6 @@ from yidl.concept_parser import compile_yidl_files
 from yidl.generation.data_def_sys import emit_concept_runtime_source
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 
-
 YIDL_PATH = Path("src/yidl_lifecycle/yidl/lifecycle_core.yidl")
 
 
@@ -144,13 +143,33 @@ def _container(namespace: Mapping[str, object]) -> object:
             default_value_param_name="_Counter_KIND_default",
         ),
     )
+    for order, kind in enumerate(("after_commit", "after_rollback")):
+        builder.add(
+            namespace["TransactionMethodsCollection"],
+            namespace["TransactionMethod"](
+                method_id=f"Counter.{kind}",
+                method_owner="Counter",
+                method_name="_after_finish",
+                method_kind=kind,
+                tx_key_key=DEFAULT_TRANSACTION,
+                tx_index=0,
+                declaration_order=order,
+            ),
+        )
     return namespace["build_container"](builder)
 
 
 def _assert_generated_class(namespace: Mapping[str, object]) -> None:
+    events: list[int] = []
+
     class Counter:
         def user_method(self) -> str:
             return "user"
+
+        def _after_finish(self) -> None:
+            events.append(self.plain)
+            if self.hook_failure is not None:
+                raise self.hook_failure
 
     lifecycle_definition = {"fields": ("plain",)}
     annotations = {"plain": "int", "seed": "int"}
@@ -210,6 +229,35 @@ def _assert_generated_class(namespace: Mapping[str, object]) -> None:
 
     with counter.begin(DEFAULT_TRANSACTION):
         pass
+
+    class HostileError(ValueError):
+        def add_note(self, note: str) -> None:
+            raise RuntimeError("core hook notes failed")
+
+    for method in ("commit_only", "rollback"):
+        for malformed_notes in (False, True):
+            events.clear()
+            first, second = generated(plain=1), generated(plain=2)
+            manager = first._y_state._y_transaction_manager
+            second._y_state._y_transaction_manager = manager
+            error = HostileError("original core hook failure")
+            if malformed_notes:
+                error.__notes__ = None
+            first.hook_failure, second.hook_failure = error, None
+            transaction = manager.begin(DEFAULT_TRANSACTION)
+            for item in (first, second):
+                item._y_state._y_ensure_working_transaction(0)
+            try:
+                getattr(manager, method)(DEFAULT_TRANSACTION)
+            except BaseException as caught:
+                assert caught is error
+            else:
+                raise AssertionError("expected core hook failure")
+            assert events == [1, 2]
+            assert transaction.completion.failures == (error,)
+            assert not transaction.completion.after_actions_complete
+            assert transaction.completion.ownership_preserved
+            assert transaction.completion.finalized
 
 
 def _assert_raises(

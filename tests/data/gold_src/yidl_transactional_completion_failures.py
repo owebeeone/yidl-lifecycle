@@ -202,6 +202,31 @@ def _exercise(
         _assert_pending_cleared(second)
         assert any("_parent_after_" in note for note in failure.__notes__)
 
+    class HostileError(ValueError):
+        def add_note(self, note: str) -> None:
+            raise RuntimeError("hook notes failed")
+
+    for method, phase in (("commit_only", "commit"), ("rollback", "rollback")):
+        for malformed_notes in (False, True):
+            manager, first, second = pair()
+            failure = HostileError("original hook failure")
+            if malformed_notes:
+                failure.__notes__ = None
+            first.control[f"{phase}_error"] = failure
+            transaction = manager.begin(DEFAULT_TRANSACTION)
+            first.count, second.count = 10, 20
+            assert (
+                _error(lambda: getattr(manager, method)(DEFAULT_TRANSACTION)) is failure
+            )
+            for rank in (2, 1):
+                assert events.count(f"parent_{phase}:{rank}") == 1
+                assert events.count(f"child_{phase}:{rank}") == 1
+            outcome = transaction.completion
+            assert outcome.failures == (failure,) and not outcome.after_actions_complete
+            assert outcome.finalized and outcome.ownership_preserved
+            _assert_pending_cleared(first)
+            _assert_pending_cleared(second)
+
     manager, first, second = pair()
     parent_error = ValueError("parent after hook failed")
     child_error = KeyboardInterrupt("child after hook interrupted")
@@ -277,6 +302,31 @@ def _exercise(
         transaction.completion.publication_complete
         and transaction.completion.after_actions_complete
     )
+
+    for name in ("count", "untouched", "items", "scratch"):
+        manager, first, second = pair()
+        transaction = manager.begin(DEFAULT_TRANSACTION)
+        first.count, second.count = 10, 20
+
+        def validation_write(item: object, name: str = name) -> None:
+            events.append("reentrant_validator")
+            if name in ("items", "scratch"):
+                getattr(item.working, name)
+            else:
+                setattr(item, name, 99)
+
+        first.control["validate"] = validation_write
+        first.control["before"] = lambda item: manager.validate(DEFAULT_TRANSACTION)
+        error = _error(lambda: manager.commit_only(DEFAULT_TRANSACTION))
+        assert isinstance(error, RuntimeError) and "completing" in str(error)
+        assert "reentrant_validator" not in events
+        assert "factory" not in events and "thaw" not in events
+        outcome = transaction.completion
+        assert not outcome.publication_started and outcome.discard_complete
+        assert outcome.after_actions_complete and outcome.ownership_preserved
+        assert first.current.count == second.current.count == 0
+        _assert_pending_cleared(first)
+        _assert_pending_cleared(second)
 
     for phase in ("validate", "before", "conversion", "after"):
         for name in ("count", "untouched", "resource", "scratch"):
@@ -368,7 +418,12 @@ def _exercise(
     other = manager.begin("audit")
     transaction = manager.begin(DEFAULT_TRANSACTION)
     first.count, second.count = 10, 20
-    first.control["before"] = lambda item: setattr(item, "audit", 30)
+
+    def independent_key_write(item: object) -> None:
+        item.audit = 30
+        manager.validate("audit")
+
+    first.control["before"] = independent_key_write
     manager.commit_only(DEFAULT_TRANSACTION)
     assert transaction.completion.publication_complete
     assert manager.active_transaction_for("audit") is other and first.current.audit == 0

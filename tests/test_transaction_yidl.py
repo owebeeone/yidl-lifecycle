@@ -707,7 +707,9 @@ def test_repeated_exception_keeps_identity_and_each_callback_note() -> None:
         "after_rollback",
     ),
 )
-@pytest.mark.parametrize("mutation", ("begin", "commit", "rollback", "enlist", "drop"))
+@pytest.mark.parametrize(
+    "mutation", ("begin", "commit", "rollback", "validate", "enlist", "drop")
+)
 def test_completion_guards_membership_and_reentry_before_mutation(
     phase: str, mutation: str
 ) -> None:
@@ -1009,3 +1011,130 @@ def test_before_hook_failure_closes_legacy_candidate_write_permission() -> None:
     with pytest.raises(ValueError) as caught:
         manager.commit_only()
     assert caught.value is failure
+
+
+@pytest.mark.parametrize("phase", ("prepare", "discard", "validate"))
+@pytest.mark.parametrize("annotation", ("override", "malformed_notes", "key_repr"))
+def test_diagnostic_annotation_cannot_interrupt_completion(
+    phase: str, annotation: str
+) -> None:
+    class HostileError(ValueError):
+        def add_note(self, note: str) -> None:
+            raise RuntimeError("notes failed")
+
+    class HostileKey:
+        def __repr__(self) -> str:
+            raise RuntimeError("key repr failed")
+
+    failure = HostileError("original failure")
+    if annotation == "malformed_notes":
+        failure.__notes__ = None
+    key = HostileKey() if annotation == "key_repr" else DEFAULT_TRANSACTION
+    manager = TransactionManager(tx_keys=(key,))
+    events: list[str] = []
+    transaction = manager.begin(key)
+    manager.enlist(
+        CompletionContext(
+            name="A", events=events, require_validation=True, errors={phase: failure}
+        ),
+        key,
+    )
+    manager.enlist(CompletionContext(name="B", events=events), key)
+    method = manager.rollback if phase == "discard" else manager.commit
+    with pytest.raises((ValueError, ExceptionGroup)) as caught:
+        method(key)
+    error = caught.value
+    assert error is failure or error.exceptions == (failure,)
+    assert events[-1] == "after_rollback:B"
+    assert "discard:A" in events and "discard:B" in events
+    outcome = transaction.completion
+    assert outcome.failures == (error,)
+    assert outcome.discard_complete is (phase != "discard")
+    assert outcome.after_actions_complete and outcome.ownership_preserved
+    assert outcome.finalized and manager.active_transaction_for(key) is None
+
+
+def test_multi_key_scope_annotation_failure_cannot_skip_another_key() -> None:
+    class HostileError(ValueError):
+        def add_note(self, note: str) -> None:
+            raise RuntimeError("scope notes failed")
+
+    manager = TransactionManager(tx_keys=(GROUP_ALPHA, GROUP_BETA))
+    original = HostileError("beta failed")
+    original.__notes__ = None
+    events: list[str] = []
+    with pytest.raises(ValueError) as caught:
+        with manager.begin(GROUP_ALPHA, GROUP_BETA) as scope:
+            manager.enlist(CompletionContext(name="A", events=events), GROUP_ALPHA)
+            manager.enlist(
+                CompletionContext(
+                    name="B", events=events, errors={"prepare": original}
+                ),
+                GROUP_BETA,
+            )
+    assert caught.value is original
+    assert "apply:A" in events and "after_commit:A" in events
+    assert all(transaction.completion.finalized for transaction in scope.transactions)
+    assert scope.transactions[1].completion.failures == (original,)
+
+
+@pytest.mark.parametrize("attribute", ("tx_key", "tx_id"))
+@pytest.mark.parametrize("phase", ("before_completion", "prepare", "after_commit"))
+@pytest.mark.parametrize("method", ("commit_only", "rollback"))
+def test_relabelled_token_cannot_relabel_completion_evidence(
+    attribute: str, phase: str, method: str
+) -> None:
+    manager = TransactionManager(tx_keys=(GROUP_ALPHA,))
+    transaction = manager.begin(DEFAULT_TRANSACTION)
+    original_id = transaction.tx_id
+    events: list[str] = []
+    context = CompletionContext(name="A", events=events)
+    manager.enlist(context, DEFAULT_TRANSACTION)
+    manager.enlist(CompletionContext(name="B", events=events), DEFAULT_TRANSACTION)
+
+    def relabel() -> None:
+        setattr(transaction, attribute, GROUP_ALPHA if attribute == "tx_key" else 99)
+
+    if phase == "before_completion":
+        relabel()
+    else:
+        callback = phase
+        if method == "rollback":
+            callback = "discard" if phase == "prepare" else "after_rollback"
+        context.actions[callback] = relabel
+    with pytest.raises(RuntimeError, match="changed"):
+        getattr(manager, method)(DEFAULT_TRANSACTION)
+    outcome = transaction.completion
+    assert outcome.tx_key is DEFAULT_TRANSACTION and outcome.tx_id == original_id
+    assert not outcome.ownership_preserved and outcome.finalized
+    assert not outcome.after_actions_complete
+    assert manager.active_transaction is None
+    if phase == "before_completion":
+        assert events == []
+    elif phase == "prepare":
+        assert "apply:A" not in events and "apply:B" not in events
+    following = manager.begin(DEFAULT_TRANSACTION)
+    assert following.tx_id == original_id + 1 and following.completion is None
+    manager.rollback(DEFAULT_TRANSACTION)
+
+
+@pytest.mark.parametrize("attribute", ("tx_key", "tx_id"))
+def test_relabelled_original_does_not_finalize_replacement(attribute: str) -> None:
+    manager = TransactionManager(tx_keys=(GROUP_ALPHA,))
+    original = manager.begin(DEFAULT_TRANSACTION)
+    replacement = LifecycleTransaction(tx_id=2)
+
+    def replace() -> None:
+        setattr(original, attribute, GROUP_ALPHA if attribute == "tx_key" else 99)
+        manager.active_transaction = replacement
+
+    context = CompletionContext(name="A", actions={"prepare": replace})
+    manager.enlist(context, DEFAULT_TRANSACTION)
+    with pytest.raises(RuntimeError, match="changed"):
+        manager.commit_only(DEFAULT_TRANSACTION)
+    outcome = original.completion
+    assert outcome.tx_key is DEFAULT_TRANSACTION and outcome.tx_id == 1
+    assert not outcome.ownership_preserved and not outcome.finalized
+    assert manager.active_transaction is replacement and replacement.completion is None
+    assert context.events == ["order:A", "prepare:A"]
+    manager.rollback(DEFAULT_TRANSACTION)

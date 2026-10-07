@@ -127,6 +127,8 @@ def _raise_failures(message: str, failures: Iterable[BaseException]) -> None:
 class LifecycleTransaction:
     tx_id: int
     tx_key: Hashable = DEFAULT_TRANSACTION
+    _original_tx_id: int = field(init=False, repr=False, compare=False)
+    _original_tx_key: Hashable = field(init=False, repr=False, compare=False)
     dirty_contexts: dict[int, TransactionContext] = field(default_factory=dict)
     validator_contexts: dict[int, TransactionContext] = field(default_factory=dict)
     _scope_commit: Callable[[], object] | None = field(
@@ -138,6 +140,10 @@ class LifecycleTransaction:
     _completion: TransactionCompletion | None = field(
         default=None, init=False, repr=False, compare=False
     )
+
+    def __post_init__(self) -> None:
+        self._original_tx_id = self.tx_id
+        self._original_tx_key = self.tx_key
 
     @property
     def completion(self) -> TransactionCompletion | None:
@@ -249,6 +255,8 @@ class LifecycleTransaction:
 class _CompletionSession:
     manager: GroupTransactionManager
     transaction: LifecycleTransaction
+    tx_id: int = field(init=False)
+    tx_key: Hashable = field(init=False)
     participants: tuple[TransactionContext, ...] = field(init=False)
     validators: tuple[TransactionContext, ...] = field(init=False)
     begin_count: int = field(init=False)
@@ -263,6 +271,8 @@ class _CompletionSession:
     before_hook_context: TransactionContext | None = field(default=None, init=False)
 
     def __post_init__(self) -> None:
+        self.tx_id = self.transaction._original_tx_id
+        self.tx_key = self.transaction._original_tx_key
         self.participants = tuple(self.transaction.dirty_contexts.values())
         self.validators = tuple(self.transaction.validator_contexts.values())
         self.begin_count = self.manager.begin_count
@@ -277,7 +287,7 @@ class _CompletionSession:
             raise RuntimeError(
                 "candidate write is not allowed while yidl transaction key is completing: "
                 f"participant={type(context).__qualname__}, "
-                f"tx_key={self.transaction.tx_key!r}, tx_id={self.transaction.tx_id}"
+                f"tx_key={self.tx_key!r}, tx_id={self.tx_id}"
             )
 
     def _record(
@@ -286,12 +296,17 @@ class _CompletionSession:
         phase: str,
         context: TransactionContext | None = None,
     ) -> None:
-        participant = "manager" if context is None else type(context).__qualname__
-        error.add_note(
-            f"yidl completion phase={phase}, participant={participant}, "
-            f"tx_key={self.transaction.tx_key!r}, tx_id={self.transaction.tx_id}"
-        )
         self.failures[:] = _unique_failures((*self.failures, error))
+        # Diagnostics must not interrupt cleanup or replace the retained failure.
+        try:
+            participant = "manager" if context is None else type(context).__qualname__
+            BaseException.add_note(
+                error,
+                f"yidl completion phase={phase}, participant={participant}, "
+                f"tx_key={self.tx_key!r}, tx_id={self.tx_id}",
+            )
+        except BaseException:
+            pass
 
     def _check_ownership(self) -> bool:
         if not self.ownership_preserved:
@@ -301,6 +316,10 @@ class _CompletionSession:
         validators = tuple(transaction.validator_contexts.values())
         preserved = (
             self.manager.active_transaction is transaction
+            and type(transaction.tx_id) is int
+            and transaction.tx_id == self.tx_id
+            and transaction.tx_key is self.tx_key
+            and self.manager.tx_key is self.tx_key
             and self.manager.begin_count == self.begin_count
             and len(dirty) == len(self.participants)
             and all(
@@ -315,7 +334,9 @@ class _CompletionSession:
         if not preserved:
             self.ownership_preserved = False
             self._record(
-                RuntimeError("owned yidl transaction or completion membership changed"),
+                RuntimeError(
+                    "owned yidl transaction identity or completion membership changed"
+                ),
                 "ownership",
             )
         return preserved
@@ -338,14 +359,14 @@ class _CompletionSession:
             if callback is not None:
                 if publishes:
                     self.publication_started = True
-                callback(self.transaction.tx_key, self.transaction.tx_id)
+                callback(self.tx_key, self.tx_id)
             elif (
                 legacy is not None
                 and (callback := getattr(context, legacy, None)) is not None
             ):
                 if publishes:
                     self.publication_started = True
-                callback(self.transaction.tx_id, self.transaction.tx_key)
+                callback(self.tx_id, self.tx_key)
             elif required:
                 raise AttributeError(
                     f"{type(context).__qualname__!r} has no yidl {phase} callback"
@@ -363,15 +384,19 @@ class _CompletionSession:
             if not self._check_ownership():
                 break
             try:
-                if not context.validate_commit_for(self.transaction.tx_key):
+                if not context.validate_commit_for(self.tx_key):
                     raise YidlValidatorReturnedFalse(context)
             except BaseException as error:
-                error.add_note(
-                    f"yidl validator participant={type(context).__qualname__}, "
-                    f"tx_key={self.transaction.tx_key!r}, tx_id={self.transaction.tx_id}"
-                )
                 if not any(previous is error for previous in failures):
                     failures.append(error)
+                try:
+                    BaseException.add_note(
+                        error,
+                        f"yidl validator participant={type(context).__qualname__}, "
+                        f"tx_key={self.tx_key!r}, tx_id={self.tx_id}",
+                    )
+                except BaseException:
+                    pass
             self._check_ownership()
         if failures:
             self._record(
@@ -388,9 +413,7 @@ class _CompletionSession:
             if not self._check_ownership():
                 return None
             try:
-                keys.append(
-                    (context.commit_order_key_for(self.transaction.tx_key), context)
-                )
+                keys.append((context.commit_order_key_for(self.tx_key), context))
             except BaseException as error:
                 self._record(error, "order", context)
                 self._check_ownership()
@@ -498,8 +521,8 @@ class _CompletionSession:
         self.manager._completing = False
         self.manager._completion_session = None
         self.transaction._completion = TransactionCompletion(
-            tx_key=self.transaction.tx_key,
-            tx_id=self.transaction.tx_id,
+            tx_key=self.tx_key,
+            tx_id=self.tx_id,
             publication_started=self.publication_started,
             publication_complete=self.publication_complete,
             discard_complete=self.discard_complete,
@@ -583,7 +606,7 @@ class GroupTransactionManager:
             or session.preparing is not context
             or session.before_hook_context is not None
             or id(context) not in session.unprepared_ids
-            or session.transaction.tx_id != tx_token
+            or session.tx_id != tx_token
             or not session._check_ownership()
         ):
             raise RuntimeError("invalid yidl before-commit hook window")
@@ -597,6 +620,12 @@ class GroupTransactionManager:
     def _require_current(self, transaction: LifecycleTransaction) -> None:
         if self.active_transaction is not transaction:
             raise RuntimeError("owned yidl transaction is missing or replaced")
+        if (
+            type(transaction.tx_id) is not int
+            or transaction.tx_id != transaction._original_tx_id
+            or transaction.tx_key is not transaction._original_tx_key
+        ):
+            raise RuntimeError("owned yidl transaction identity changed")
 
     def require_sole_transaction_owner(self, transaction: LifecycleTransaction) -> None:
         """Check ownership without validating, publishing, or changing nesting."""
@@ -622,11 +651,13 @@ class GroupTransactionManager:
     def validate(self, tx_key: Hashable = DEFAULT_TRANSACTION) -> None:
         if tx_key != self.tx_key:
             raise RuntimeError(f"unknown yidl transaction key {tx_key!r}")
+        self._require_not_completing()
         if self.begin_count <= 0:
             raise RuntimeError("no active yidl transaction")
         transaction = self.active_transaction
         if transaction is None:
             raise RuntimeError("yidl transaction manager state is corrupted")
+        self._require_current(transaction)
         transaction.validate_commit()
 
     def commit_only(self, tx_key: Hashable = DEFAULT_TRANSACTION) -> int | None:
@@ -652,7 +683,7 @@ class GroupTransactionManager:
         finally:
             session.finalize()
         _raise_failures("yidl transaction completion failed", session.failures)
-        return transaction.tx_id
+        return session.tx_id
 
     def commit(self, tx_key: Hashable = DEFAULT_TRANSACTION) -> int | None:
         return self._complete_commit(tx_key, validate=True)
@@ -672,7 +703,7 @@ class GroupTransactionManager:
         finally:
             session.finalize()
         _raise_failures("yidl transaction rollback failed", session.failures)
-        return transaction.tx_id
+        return session.tx_id
 
     def enlist(
         self, context: TransactionContext, tx_key: Hashable = DEFAULT_TRANSACTION
@@ -732,10 +763,15 @@ class _MultiGroupTransactionScope:
             try:
                 transaction.__exit__(exc_type, None, tb)
             except BaseException as error:
-                error.add_note(
-                    f"yidl scope tx_key={transaction.tx_key!r}, tx_id={transaction.tx_id}"
-                )
                 failures.append(error)
+                try:
+                    BaseException.add_note(
+                        error,
+                        f"yidl scope tx_key={transaction._original_tx_key!r}, "
+                        f"tx_id={transaction._original_tx_id}",
+                    )
+                except BaseException:
+                    pass
         if failures:
             _raise_failures(
                 "yidl transaction scope completion failed",
@@ -785,9 +821,9 @@ class TransactionManager:
 
     def require_sole_transaction_owner(self, transaction: LifecycleTransaction) -> None:
         """Require this token to own its key with exactly one outstanding begin."""
-        self._get_group_manager(transaction.tx_key).require_sole_transaction_owner(
-            transaction
-        )
+        self._get_group_manager(
+            transaction._original_tx_key
+        ).require_sole_transaction_owner(transaction)
 
     def _require_candidate_write(
         self, context: TransactionContext, tx_key: Hashable = DEFAULT_TRANSACTION

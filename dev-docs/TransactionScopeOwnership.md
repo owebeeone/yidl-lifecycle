@@ -31,7 +31,9 @@ per-key completion, not atomic publication across keys.
 ## Completion Callbacks
 
 While a key prepares/applies/finishes commit or rollback, reentrant same-key
-begin, commit, and rollback are rejected. A multi-key begin preflights that
+begin, validate, commit, and rollback are rejected. Public standalone validation
+is available only outside final completion; it cannot borrow an open before-hook
+write window. A multi-key begin preflights that
 restriction before opening any requested key. Independent other-key operations
 remain available. Normal `commit` also fences the original token after
 validation: a validator cannot replace it and have the replacement committed
@@ -50,6 +52,13 @@ Nested nonfinal commits and standalone validation leave it unset. Evidence
 records the original key/token, whether application was entered/completed,
 discard/after-action completion, ownership/finalization, and original failures.
 An application that mutates then raises is not reported as undone.
+
+Key/ID identity is retained from transaction creation, independently of public
+token metadata. Reassigning that metadata is unsupported and loses completion
+authority; evidence still names the original key/ID, and a replacement active
+token is not finalized by the old completion. Diagnostic formatting and exception
+notes are best-effort: an overridden annotation method or malformed notes cannot
+interrupt cleanup or replace an already retained original failure.
 
 Participants and commit order are captured once. Preparation stops on its first
 failure; discard drains all captured participants. Independent applications

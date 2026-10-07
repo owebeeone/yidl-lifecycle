@@ -20,7 +20,13 @@ callback holders, change marker semantics, or provide atomic multi-key commit.
 - The complete decorator, canonical outputs, and constructor performance
   fixtures were regenerated from their owning source, not manually patched.
 
-## Verification
+## Original Candidate Verification
+
+These are the checks for reviewed candidate
+`30b7c83f3ef7a733a38a55b221a022aa7b7f8e84`, before remediation. Both review
+axes returned NO-GO; their findings are preserved in the
+[Code](L0Completion-ReviewCode.md) and [State](L0Completion-ReviewState.md)
+reports. The passing checks below did not close those findings.
 
 | Check | Result |
 | --- | --- |
@@ -122,13 +128,57 @@ other lockfile metadata and the existing dependency surface are unchanged.
 
 ## Acceptance Gate
 
-Fresh peer-blind Code and State reviews must judge the same committed candidate
-against the accepted contract, including the original failure traces and the
-generated inherited-hook/write-window behavior. No implementation acceptance
-is claimed until both report GO at the same tuple.
+The same independent Code and State reviewers must re-verdict the corrected,
+committed candidate against the accepted contract and their original findings.
+No implementation acceptance is claimed until both report GO at the same tuple.
 
 The later private-consumer checkpoint owns the two Pyrolyze transition differences:
 `test_unclassified_commit_failure_is_not_rolled_back_or_retried[apply_error]`
 and `test_lifecycle_failure_completion_characterization_baseline`. Preserve
 their historical observation/revision and introduce separately named current
 outcomes; do not silently rewrite history or treat these as unrelated debt.
+
+## Remediation 1 Verification
+
+The [combined remediation](L0Completion-RemPlan-1.md) addresses all three
+accepted findings without changing the permission or publication contract:
+
+- Retain original failures before best-effort diagnostic formatting and standard
+  `BaseException.add_note`; annotation cannot interrupt manager/scope cleanup or
+  either generated after-hook wrapper.
+- Reject same-key public validation during final completion. Standalone and
+  independent-key validation remain available outside that key's completion.
+- Retain transaction creation key/ID independently; session callbacks, notes,
+  results, and evidence use those originals. Public metadata relabeling loses
+  authority, does not relabel evidence, and cannot finalize a replacement.
+
+Red-first evidence: nine manager annotation cases and one multi-key scope case
+failed on the reviewed implementation; fourteen key/ID relabeling cases failed
+after correcting the test setup to select the default key explicitly. A native
+generated before-hook/validation probe published 99 instead of staged 10 and
+certified ownership. The expanded complete fixture rejected the original hook
+wrapper; the expanded core fixture also rejected its prior decorator loaded
+from `git show 30b7c83:...` in memory, without checkout changes.
+
+| Corrected Candidate Check | Result |
+| --- | --- |
+| Manager mechanics | 116 passed |
+| Full library, Python 3.12, native | 376 passed, 46 skipped |
+| Full library, Python 3.13, native | 376 passed, 46 skipped |
+| Full library, Python 3.14, native | 376 passed, 46 skipped |
+| Python 3.13 Python backend, manager and two canonical goldens | 118 passed, 9 deselected |
+| Complete and core-only fixtures, native runtime/source | Pass |
+| Complete fixture, Python backend exact source/runtime | Pass |
+| Read-only generated decorator consistency | Matches |
+| Black and diff checks | Pass |
+| Pyrolyze seven-file baseline after remediation | 125 passed; the same two pending consumer-transition failures |
+
+The Python focused selection is `tests/test_transaction_yidl.py` and
+`tests/test_yidl_goldens.py -k 'transaction_yidl or completion_failures or lifecycle_core'`.
+It does not reclassify the separately documented owned-field source mismatch.
+The complete decorator, all golden outputs, and constructor fixture were
+regenerated; the constructor fixture required no byte changes. No compiler,
+Pyrolyze runtime, parent pointer, tag, or remote was changed.
+
+Remediation count: one combined patch. Implementation acceptance remains pending
+the same reviewers' closure checks at the corrected settled tuple.

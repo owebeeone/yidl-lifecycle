@@ -338,8 +338,11 @@ concept LifecycleCore {
                 try:
                     self._y_get_default_facade().astichi_ref(external=method_name)()
                 except BaseException as error:
-                    error.add_note(astichi_bind_external(method_name))
                     failures.append(error)
+                    try:
+                        BaseException.add_note(error, astichi_bind_external(method_name))
+                    except BaseException:
+                        pass
     ]$
 
     resource CommitOrderKeyFallbackBranch = template $[
