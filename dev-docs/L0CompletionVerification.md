@@ -1,7 +1,11 @@
 # L0 Completion Verification
 
-Updated: 2026-10-08. Status: implementation candidate; independent Code/State
-acceptance review and private Pyrolyze consumer adoption remain pending.
+Updated: 2026-10-08. Status: **library checkpoint accepted at
+`4b86eec179942d96012aa4a1d92752a34cae87ef` after
+[Code GO](history/l0-completion/L0Completion-ReviewCode-2.md) and
+[State GO](history/l0-completion/L0Completion-ReviewState-2.md)**.
+This accepts L0-1/L0-2 and the library verification/review gate only. Historical
+probe transition and private Pyrolyze consumer adoption remain pending.
 
 ## Scope
 
@@ -25,7 +29,8 @@ callback holders, change marker semantics, or provide atomic multi-key commit.
 These are the checks for reviewed candidate
 `30b7c83f3ef7a733a38a55b221a022aa7b7f8e84`, before remediation. Both review
 axes returned NO-GO; their findings are preserved in the
-[Code](L0Completion-ReviewCode.md) and [State](L0Completion-ReviewState.md)
+[Code](history/l0-completion/L0Completion-ReviewCode.md) and
+[State](history/l0-completion/L0Completion-ReviewState.md)
 reports. The passing checks below did not close those findings.
 
 | Check | Result |
@@ -128,9 +133,24 @@ other lockfile metadata and the existing dependency surface are unchanged.
 
 ## Acceptance Gate
 
-The same independent Code and State reviewers must re-verdict the corrected,
-committed candidate against the accepted contract and their original findings.
-No implementation acceptance is claimed until both report GO at the same tuple.
+The same independent Code and State reviewers returned GO at the corrected
+settled tuple. Both reran original counterexamples against the prior and
+corrected implementations, checked both canonical fixtures under both backends,
+and verified exact generated-decorator consistency. Their reports are preserved
+verbatim in [review history](history/l0-completion/).
+
+| Accepted Tuple | Revision |
+| --- | --- |
+| Lifecycle implementation | `4b86eec179942d96012aa4a1d92752a34cae87ef` |
+| Pyrolyze controlling plan/runtime | `ac410240fc33459da31ffcc87863f915ed7e124e` |
+| YIDL | `a7cc1de7b630b55bd194940ecad83f3f1738cf8a` |
+| Astichi | `1c47f781d3804130fdd61cbee07a3b2e4529158a` |
+
+Three distinct P2 defects were found before implementation acceptance; both
+axes independently found the annotation defect. All three closed after one
+combined remediation. There were no new findings in the focused re-verdicts,
+and no live activation occurred. Subsequent filing/index commits are
+documentation-only, not a different reviewed implementation.
 
 The later private-consumer checkpoint owns the two Pyrolyze transition differences:
 `test_unclassified_commit_failure_is_not_rolled_back_or_retried[apply_error]`
@@ -140,7 +160,7 @@ outcomes; do not silently rewrite history or treat these as unrelated debt.
 
 ## Remediation 1 Verification
 
-The [combined remediation](L0Completion-RemPlan-1.md) addresses all three
+The [combined remediation](history/l0-completion/L0Completion-RemPlan-1.md) addresses all three
 accepted findings without changing the permission or publication contract:
 
 - Retain original failures before best-effort diagnostic formatting and standard
@@ -180,5 +200,7 @@ The complete decorator, all golden outputs, and constructor fixture were
 regenerated; the constructor fixture required no byte changes. No compiler,
 Pyrolyze runtime, parent pointer, tag, or remote was changed.
 
-Remediation count: one combined patch. Implementation acceptance remains pending
-the same reviewers' closure checks at the corrected settled tuple.
+Remediation count: one combined patch, closed by GO/GO at the accepted tuple.
+Next: private Pyrolyze owner adoption, its historical probe disposition and
+independent consumer review. Resource admission and callback-holder migration
+remain later gates.

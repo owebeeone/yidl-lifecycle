@@ -41,10 +41,11 @@ by the old call.
 
 ## Terminal Completion Evidence
 
-The L0 implementation candidate follows
+The accepted L0 library implementation follows
 [the accepted completion contract](../../pyrolyze/dev-docs/PytoLifecyleIntegSC3-L0Plan.md).
-Library implementation acceptance and private Pyrolyze consumer adoption remain
-separate gates; no live resource route is activated by these library changes.
+[Its acceptance record](L0CompletionVerification.md) pins the implementation
+and GO/GO evidence. Private Pyrolyze consumer adoption remains a separate gate;
+no live resource route is activated by these library changes.
 
 The original `LifecycleTransaction.completion` retains an immutable
 `TransactionCompletion` after final completion, even when completion raises.
