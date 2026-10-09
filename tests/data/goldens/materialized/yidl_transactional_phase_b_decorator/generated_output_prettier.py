@@ -118,14 +118,15 @@ def build_lifecycle_class(
 
         def _y_require_active_transaction(self, tx_index):
             tx_key = self.__yidl_tx_index_to_key__[tx_index]
-            transaction = self._y_transaction_manager.active_transaction_for(tx_key)
+            group_manager = self._y_transaction_manager._get_group_manager(tx_key)
+            transaction = group_manager.active_transaction
             if transaction is None:
                 if self._y_working_tx_ids[tx_index] is not None:
                     raise RuntimeError(
                         "stale yidl working value without an active transaction"
                     )
                 raise RuntimeError("writes require an active yidl transaction")
-            self._y_transaction_manager._require_candidate_write(self, tx_key)
+            group_manager._require_candidate_write(self, tx_key)
             existing_tx_id = self._y_working_tx_ids[tx_index]
             if existing_tx_id is not None and existing_tx_id != transaction.tx_id:
                 raise RuntimeError(

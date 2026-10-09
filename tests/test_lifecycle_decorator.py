@@ -47,6 +47,28 @@ class _TestBinding(BindingBase):
     pass
 
 
+def test_candidate_write_check_resolves_group_manager_once(monkeypatch) -> None:
+    class Counter:
+        count: int = managed(default=1)
+
+    manager = TransactionManager()
+    item = lifecycle(Counter)(transaction_manager=manager)
+    lookups = 0
+    original = TransactionManager._get_group_manager
+
+    def counted_lookup(self, group):
+        nonlocal lookups
+        lookups += 1
+        return original(self, group)
+
+    monkeypatch.setattr(TransactionManager, "_get_group_manager", counted_lookup)
+    with manager.begin():
+        lookups = 0
+        transaction = item._y_state._y_require_active_transaction(0)
+        assert lookups == 1
+        assert transaction is manager.active_transaction_for()
+
+
 def test_lifecycle_decorator_builds_phase_a_generated_class() -> None:
     class Counter:
         plain: int = field(default=3)
