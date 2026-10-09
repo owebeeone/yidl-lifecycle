@@ -24,6 +24,56 @@ callback holders, change marker semantics, or provide atomic multi-key commit.
 - The complete decorator, canonical outputs, and constructor performance
   fixtures were regenerated from their owning source, not manually patched.
 
+## Completion Ownership Scaling Correction (2026-10-09)
+
+The accepted implementation checked ownership around O(N) callbacks by copying
+and comparing all N participants each time. This made ownership checking O(N^2).
+Small correctness tests did not expose that aggregate cost.
+
+The correction uses ordered, versioned membership mappings. Completion captures
+participants once, then compares transaction identity, mapping identities and
+membership versions in O(1) per check. Public mapping mutations, replacement,
+and deletion followed by restoration invalidate certification. Assigning the
+same object to its existing key is a no-op. Caller-provided mappings are copied
+into tracked storage at completion start; aliases to those old mappings no
+longer control completion membership. No check frequency or write restriction
+is relaxed. Ordering can still cost O(N log N); this is not a claim that every
+rendering operation is linear.
+
+The deterministic manager regression requires exactly two snapshots at 10, 100
+and 1,000 participants, avoiding a machine-dependent timing assertion.
+
+Measured with the opt-in lifecycle route in the real PySide6 grid example:
+
+| Measurement | Before | After |
+| --- | --- | --- |
+| Profiled 20x20 ownership checks (57,253 calls) | 24.936 s | 0.012 s |
+| Profiled 20x20 logical update | 27.682 s | 2.730 s |
+| Unprofiled 20x20 logical update | 9.468 s | 0.866 s |
+| First unprofiled 20x20 logical layout toggle | 60.419 s | 1.278 s |
+
+Logical timings exclude host reconciliation. The first complete UI operation
+budget rerun took 6.38 s against its unchanged 6 s limit while other verification
+was running. A subsequent isolated rerun passed the unchanged budget. This is
+evidence for the bounded performance correction, not default-route activation.
+
+Verification: 126 focused manager tests pass; the final full library run passed
+386 tests with 46 existing skips.
+The full Pyrolyze run passed 1,161 tests with 20 existing skips and only the two
+known host-ordering failures. No goldens changed.
+
+To reproduce from the sibling `pyrolyze` repository, set
+`QT_QPA_PLATFORM=offscreen`, `PYROLYZE_CONTEXT_IMPL=lifecycle`, and
+`PYTHONPATH=src:../yidl-lifecycle/src:../yidl/src:../astichi/src`. Run
+`examples/run_grid_app_pyside6.py` via `runpy.run_path`, call `build_app_host()`,
+then find the `header:cols:value` and `header:rows:value` QLineEdits. Set both to
+5, 10 and 20 in sequence, timing each pair of assignments plus
+`ctx.run_pending_invalidations()`. Wrap those intervals in `cProfile` to inspect
+`transaction_yidl._CompletionSession._check_ownership`. At 20x20 click
+`header:layout:toggle` and drain pending invalidations for the logical toggle.
+Close the host afterwards. For the separate end-to-end host budget, run
+`python -m pytest tests/test_examples_grid_app_pyside6_native.py -k large_layout_toggle`.
+
 ## Original Candidate Verification
 
 These are the checks for reviewed candidate

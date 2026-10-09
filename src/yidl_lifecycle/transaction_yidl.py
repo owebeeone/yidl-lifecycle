@@ -4,6 +4,8 @@ from collections.abc import Callable
 from collections.abc import Hashable
 from collections.abc import Iterable
 from collections.abc import Iterator
+from collections.abc import Mapping
+from collections.abc import MutableMapping
 from contextlib import AbstractContextManager
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -123,14 +125,65 @@ def _raise_failures(message: str, failures: Iterable[BaseException]) -> None:
         raise BaseExceptionGroup(message, unique)
 
 
+class _Membership(MutableMapping[int, TransactionContext]):
+    """Ordered membership with constant-time completion mutation checks.
+
+    Composition keeps inherited mapping mutators on the versioned write path.
+    Completion checks identity and version, never rescans all participants around
+    each callback. Removing and restoring an entry still counts as mutation.
+    """
+
+    __slots__ = ("_entries", "_version")
+
+    def __init__(
+        self,
+        source: (
+            Mapping[int, TransactionContext] | Iterable[tuple[int, TransactionContext]]
+        ) = (),
+    ) -> None:
+        self._entries = dict(source)
+        self._version = 0
+
+    @property
+    def version(self) -> int:
+        return self._version
+
+    def __getitem__(self, key: int) -> TransactionContext:
+        return self._entries[key]
+
+    def __setitem__(self, key: int, value: TransactionContext) -> None:
+        if key not in self._entries or self._entries[key] is not value:
+            self._entries[key] = value
+            self._version += 1
+
+    def __delitem__(self, key: int) -> None:
+        del self._entries[key]
+        self._version += 1
+
+    def __iter__(self) -> Iterator[int]:
+        return iter(self._entries)
+
+    def __len__(self) -> int:
+        return len(self._entries)
+
+    def clear(self) -> None:
+        if self._entries:
+            self._entries.clear()
+            self._version += 1
+
+
 @dataclass(slots=True)
 class LifecycleTransaction:
     tx_id: int
     tx_key: Hashable = DEFAULT_TRANSACTION
     _original_tx_id: int = field(init=False, repr=False, compare=False)
     _original_tx_key: Hashable = field(init=False, repr=False, compare=False)
-    dirty_contexts: dict[int, TransactionContext] = field(default_factory=dict)
-    validator_contexts: dict[int, TransactionContext] = field(default_factory=dict)
+    dirty_contexts: MutableMapping[int, TransactionContext] = field(
+        default_factory=_Membership
+    )
+    validator_contexts: MutableMapping[int, TransactionContext] = field(
+        default_factory=_Membership
+    )
     _scope_commit: Callable[[], object] | None = field(
         default=None, init=False, repr=False, compare=False
     )
@@ -269,10 +322,23 @@ class _CompletionSession:
     unprepared_ids: set[int] = field(init=False)
     preparing: TransactionContext | None = field(default=None, init=False)
     before_hook_context: TransactionContext | None = field(default=None, init=False)
+    dirty_membership: _Membership = field(init=False)
+    validator_membership: _Membership = field(init=False)
+    dirty_version: int = field(init=False)
+    validator_version: int = field(init=False)
 
     def __post_init__(self) -> None:
         self.tx_id = self.transaction._original_tx_id
         self.tx_key = self.transaction._original_tx_key
+        # Normalize caller-provided mappings once; callbacks must not replace them.
+        for name in ("dirty_contexts", "validator_contexts"):
+            membership = getattr(self.transaction, name)
+            if not isinstance(membership, _Membership):
+                setattr(self.transaction, name, _Membership(membership))
+        self.dirty_membership = self.transaction.dirty_contexts
+        self.validator_membership = self.transaction.validator_contexts
+        self.dirty_version = self.dirty_membership.version
+        self.validator_version = self.validator_membership.version
         self.participants = tuple(self.transaction.dirty_contexts.values())
         self.validators = tuple(self.transaction.validator_contexts.values())
         self.begin_count = self.manager.begin_count
@@ -312,8 +378,6 @@ class _CompletionSession:
         if not self.ownership_preserved:
             return False
         transaction = self.transaction
-        dirty = tuple(transaction.dirty_contexts.values())
-        validators = tuple(transaction.validator_contexts.values())
         preserved = (
             self.manager.active_transaction is transaction
             and type(transaction.tx_id) is int
@@ -321,15 +385,10 @@ class _CompletionSession:
             and transaction.tx_key is self.tx_key
             and self.manager.tx_key is self.tx_key
             and self.manager.begin_count == self.begin_count
-            and len(dirty) == len(self.participants)
-            and all(
-                actual is expected for actual, expected in zip(dirty, self.participants)
-            )
-            and len(validators) == len(self.validators)
-            and all(
-                actual is expected
-                for actual, expected in zip(validators, self.validators)
-            )
+            and transaction.dirty_contexts is self.dirty_membership
+            and transaction.validator_contexts is self.validator_membership
+            and self.dirty_membership.version == self.dirty_version
+            and self.validator_membership.version == self.validator_version
         )
         if not preserved:
             self.ownership_preserved = False

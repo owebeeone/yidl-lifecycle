@@ -879,6 +879,68 @@ def test_validation_cannot_certify_or_discard_a_replacement_token() -> None:
     manager.rollback()
 
 
+def test_completion_does_not_rescan_membership() -> None:
+    class CountingDict(dict):
+        scans = 0
+
+        def values(self):
+            self.scans += 1
+            return super().values()
+
+    manager = TransactionManager()
+    transaction = manager.begin()
+    membership = CountingDict()
+    transaction.dirty_contexts = membership
+    for index in range(100):
+        manager.enlist(CompletionContext(name=str(index)))
+    manager.commit_only()
+    assert membership.scans <= 2
+
+
+@pytest.mark.parametrize("count", [10, 100, 1000])
+def test_completion_snapshots_membership_only_once(monkeypatch, count) -> None:
+    manager = TransactionManager()
+    transaction = manager.begin()
+    membership_type = type(transaction.dirty_contexts)
+    original_values = membership_type.values
+    scans = []
+
+    def values(mapping):
+        scans.append(len(mapping))
+        return original_values(mapping)
+
+    monkeypatch.setattr(membership_type, "values", values)
+    for index in range(count):
+        manager.enlist(CompletionContext(name=str(index)))
+    manager.commit_only()
+    assert scans == [count, 0]
+
+
+@pytest.mark.parametrize("mapping_name", ["dirty_contexts", "validator_contexts"])
+@pytest.mark.parametrize("mutation", ["replace", "update", "restore"])
+def test_completion_detects_mapping_mutations(mapping_name, mutation) -> None:
+    manager = TransactionManager()
+    transaction = manager.begin()
+    context = CompletionContext(name="A", require_validation=True)
+    manager.enlist(context)
+    mapping = getattr(transaction, mapping_name)
+
+    def mutate():
+        if mutation == "replace":
+            setattr(transaction, mapping_name, dict(mapping))
+        elif mutation == "update":
+            mapping.update({id(context): CompletionContext(name="replacement")})
+        else:
+            del mapping[id(context)]
+            mapping[id(context)] = context
+
+    context.actions["prepare"] = mutate
+    with pytest.raises(RuntimeError, match="membership changed"):
+        manager.commit_only()
+    assert not transaction.completion.ownership_preserved
+    assert not transaction.completion.publication_started
+
+
 def test_unsupported_direct_membership_mutation_prevents_certification() -> None:
     manager = TransactionManager()
     transaction = manager.begin()
