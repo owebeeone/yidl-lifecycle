@@ -7,7 +7,7 @@ name = "yidl-lifecycle"
 version = "0.1.0"
 description = "Transactional lifecycle decorator compiler built on YIDL"
 requires-python = ">=3.12"
-dependencies = ["astichi>=0.1.0", "yidl>=0.1.0"]
+dependencies = ["astichi>=0.1.0", "yidl>=0.1.0", "yidl-cache>=0.1.0"]
 authors = [{ name = "YIDL contributors" }]
 keywords = ["dsl", "compiler", "decorator", "lifecycle", "transactions"]
 classifiers = [
@@ -31,6 +31,7 @@ exclude-newer = "1 week"
 [tool.uv.sources]
 astichi = { path = "../astichi", editable = true }
 yidl = { path = "../yidl", editable = true }
+yidl-cache = { path = "../yidl-cache", editable = true }
 
 [tool.hatch.build]
 sources = ["src"]

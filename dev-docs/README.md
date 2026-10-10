@@ -10,6 +10,10 @@
   reference. Check the implementation/goldens when an older row disagrees.
 - [Transaction scope ownership](TransactionScopeOwnership.md): implemented
   token-bound scope fencing and the nonpublishing ownership check.
+- [Compiled code cache](LifecycleCodeCache.md): default-on consumer adapter,
+  fingerprint boundary, configuration, and verification.
+- [Cache startup measurements](LifecycleCodeCacheStartup.md): fresh-process
+  disabled/cold/warm comparison, phase costs, and reproduction.
 - [Repository instructions](../AGENTS.md): package ownership and coverage rules.
 
 The library generates lifecycle behavior through its feature YIDL and the
@@ -19,9 +23,11 @@ YIDL and Astichi repositories.
 ## Pending Work
 
 [The shared YIDL generated code cache plan](../../yidl/dev-docs/YidlGeneratedCodeCachePlan.md)
-proposes caching compiled builders, with Lifecycle owning its generation-input
-fingerprint and binding current values after loading. This is planning only;
-the current decorator still generates each implementation at import time.
+defines standalone compiled-builder reuse. The default-on Lifecycle adapter is now
+implemented, with fresh-process coverage and no YIDL core cache dependency.
+Representative non-GUI startup measurements now show populated-cache savings;
+automatic placement is implemented against a dual-reviewed specification;
+implementation review, cross-platform approval, and publication remain pending.
 
 [Pyrolyze's accepted L0 completion contract](../../pyrolyze/dev-docs/PytoLifecyleIntegSC3-L0Plan.md)
 is the bounded manager/generated-library prerequisite. Its design and

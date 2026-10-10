@@ -3,7 +3,12 @@ from __future__ import annotations
 import ast
 from collections.abc import Iterable
 from collections.abc import Mapping
+from types import CodeType
 from types import ModuleType
+from typing import NoReturn
+
+from yidl_cache import CompilationContext
+from yidl_lifecycle.lifecycle_code_cache import compiled_lifecycle_code
 
 from yidl_lifecycle.lifecycle_markers import FieldDecl
 from yidl_lifecycle.lifecycle_markers import LifecycleDefinitionError
@@ -38,18 +43,30 @@ def lifecycle(cls: type[object]) -> type[object]:
     if not isinstance(cls, type):
         raise TypeError("@lifecycle can only decorate classes")
     harvested = harvest_lifecycle_definition(cls)
-    try:
-        module_ast = _generate_lifecycle_ast(harvested)
-    except Exception as exc:
-        _raise_lifecycle_step_error(cls, "AST generation", exc)
+    compilation = CompilationContext(
+        f"<yidl_lifecycle.{cls.__module__}.{cls.__qualname__}>",
+    )
+
+    def produce() -> CodeType:
+        try:
+            module_ast = _generate_lifecycle_ast(harvested)
+        except Exception as exc:
+            _raise_lifecycle_step_error(cls, "AST generation", exc)
+        try:
+            return compile(
+                module_ast,
+                compilation.filename,
+                "exec",
+                flags=compilation.flags,
+                dont_inherit=compilation.dont_inherit,
+                optimize=compilation.optimize,
+            )
+        except Exception as exc:
+            _raise_lifecycle_step_error(cls, "AST execution", exc)
+
+    code = compiled_lifecycle_code(harvested, compilation, produce)
     namespace: dict[str, object] = {"__name__": cls.__module__}
     try:
-        code = compile(
-            module_ast,
-            f"<yidl_lifecycle.{cls.__module__}.{cls.__qualname__}>",
-            "exec",
-            dont_inherit=True,
-        )
         exec(code, namespace)
     except Exception as exc:
         _raise_lifecycle_step_error(cls, "AST execution", exc)
@@ -174,7 +191,7 @@ def _raise_lifecycle_step_error(
     cls: type[object],
     step: str,
     exc: BaseException,
-) -> None:
+) -> NoReturn:
     raise LifecycleDefinitionError(
         f"{cls.__qualname__}: lifecycle {step} failed: {exc}",
     ) from exc
