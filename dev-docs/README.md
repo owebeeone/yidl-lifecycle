@@ -18,6 +18,11 @@ YIDL and Astichi repositories.
 
 ## Pending Work
 
+[The shared YIDL generated code cache plan](../../yidl/dev-docs/YidlGeneratedCodeCachePlan.md)
+proposes caching compiled builders, with Lifecycle owning its generation-input
+fingerprint and binding current values after loading. This is planning only;
+the current decorator still generates each implementation at import time.
+
 [Pyrolyze's accepted L0 completion contract](../../pyrolyze/dev-docs/PytoLifecyleIntegSC3-L0Plan.md)
 is the bounded manager/generated-library prerequisite. Its design and
 L0-1/L0-2 library implementation are accepted; the implementation provides
