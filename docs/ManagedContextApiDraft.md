@@ -96,6 +96,9 @@ old version. Plain fields, binding values, and scratch fields use shared
 non-transactional storage across the views. User methods can still mutate
 those fields or have external side effects when called on a current facade.
 
+For the reference graph and facade collection rules, see
+[Lifecycle facades: references and lifetime](FacadeOwnership.md).
+
 `const` prohibits replacing its stored reference, not changing the contents of
 a mutable object it references. It is not recursive freezing.
 

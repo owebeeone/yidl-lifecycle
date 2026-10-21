@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1030" viewBox="0 0 1200 1030" role="img" aria-labelledby="title description">
+  <title id="title">Lifecycle facade ownership</title>
+  <desc id="description">Arrows point from the reference holder to the target. A client strongly retains the default facade. Default strongly caches current and working after first access. Every facade strongly retains the shared state. State holds only weak references back to the three facades, plus a strong reference to the transaction manager. With default released, a secondary facade can be collected unless another strong reference retains it. Active transaction and user payload references are omitted.</desc>
+  <defs>
+    <marker id="strong-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="weak-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="#b45309" stroke-width="1.7"/>
+    </marker>
+    <style>
+      text { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #172b45; }
+      .heading { font-size: 30px; font-weight: 700; }
+      .subtitle { font-size: 17px; fill: #53657a; }
+      .legend { font-size: 16px; }
+      .node-title { font-size: 23px; font-weight: 650; }
+      .node-detail { font-size: 16px; fill: #53657a; }
+      .strong { fill: none; stroke: #2563eb; stroke-width: 3; marker-end: url(#strong-arrow); }
+      .weak { fill: none; stroke: #b45309; stroke-width: 2.6; stroke-dasharray: 8 6; marker-end: url(#weak-arrow); }
+      .edge-label { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 16px; paint-order: stroke; stroke: #f8fafc; stroke-width: 7px; stroke-linejoin: round; }
+      .strong-label { fill: #1d4ed8; }
+      .weak-label { fill: #92400e; }
+      .edge-note { font-size: 15px; fill: #53657a; }
+    </style>
+  </defs>
+  <rect width="1200" height="1030" rx="18" fill="#f8fafc"/>
+  <text x="40" y="49" class="heading">Three views. One shared state.</text>
+  <text x="40" y="80" class="subtitle">Instance references after first access to both secondary facades</text>
+  <path d="M 42 119 H 110" class="strong"/>
+  <text x="125" y="125" class="legend">Strong · retains target</text>
+  <path d="M 410 119 H 478" class="weak"/>
+  <text x="493" y="125" class="legend">Weak · does not retain target</text>
+  <text x="902" y="125" class="legend">Holder → target</text>
+
+  <!-- Strong client and default-cache edges. -->
+  <path d="M 320 225 H 450" class="strong"/>
+  <path d="M 450 242 C 348 242, 190 292, 190 390" class="strong"/>
+  <path d="M 750 242 C 852 242, 1010 292, 1010 390" class="strong"/>
+
+  <!-- Separate routes for strong facade-to-state and weak state-to-facade edges. -->
+  <path d="M 570 282 V 650" class="strong"/>
+  <path d="M 630 650 V 282" class="weak"/>
+  <path d="M 270 502 C 270 601, 360 692, 450 692" class="strong"/>
+  <path d="M 450 747 C 203 747, 110 638, 110 502" class="weak"/>
+  <path d="M 930 502 C 930 601, 840 692, 750 692" class="strong"/>
+  <path d="M 750 747 C 997 747, 1090 638, 1090 502" class="weak"/>
+  <path d="M 600 782 V 870" class="strong"/>
+
+  <!-- Edge labels occupy the open spaces between nodes. -->
+  <text x="385" y="207" text-anchor="middle" class="edge-note">client ref</text>
+  <text x="65" y="329" class="edge-label strong-label">_y_current_facade</text>
+  <text x="65" y="353" class="edge-note">Strong cache after first access</text>
+  <text x="872" y="329" class="edge-label strong-label">_y_working_facade</text>
+  <text x="872" y="353" class="edge-note">Strong cache after first access</text>
+  <text x="551" y="489" text-anchor="middle" transform="rotate(-90 551 489)" class="edge-label strong-label">_y_state</text>
+  <text x="663" y="489" text-anchor="middle" transform="rotate(-90 663 489)" class="edge-label weak-label">_y_default_ref</text>
+  <text x="303" y="584" class="edge-label strong-label">_y_state</text>
+  <text x="55" y="660" class="edge-label weak-label">_y_current_ref</text>
+  <text x="788" y="584" class="edge-label strong-label">_y_state</text>
+  <text x="946" y="660" class="edge-label weak-label">_y_working_ref</text>
+  <text x="622" y="830" class="edge-label strong-label">_y_transaction_manager</text>
+
+  <g>
+    <rect x="40" y="170" width="280" height="85" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="62" y="208" class="node-title">Client</text>
+    <text x="62" y="237" class="node-detail">Application reference</text>
+  </g>
+  <g>
+    <rect x="450" y="170" width="300" height="112" rx="14" fill="#eef2ff" stroke="#a5b4fc" stroke-width="2"/>
+    <text x="472" y="208" class="node-title">Default facade</text>
+    <text x="472" y="237" class="node-detail">Public constructed instance</text>
+    <text x="472" y="260" class="node-detail">Overlay-aware field access</text>
+  </g>
+  <g>
+    <rect x="40" y="390" width="300" height="112" rx="14" fill="#eff6ff" stroke="#93c5fd" stroke-width="2"/>
+    <text x="62" y="428" class="node-title">Current facade</text>
+    <text x="62" y="457" class="node-detail">Committed managed values</text>
+    <text x="62" y="480" class="node-detail">Lazy wrapper · same state</text>
+  </g>
+  <g>
+    <rect x="860" y="390" width="300" height="112" rx="14" fill="#f0fdfa" stroke="#5eead4" stroke-width="2"/>
+    <text x="882" y="428" class="node-title">Working facade</text>
+    <text x="882" y="457" class="node-detail">Pending / committed fallback</text>
+    <text x="882" y="480" class="node-detail">Lazy wrapper · same state</text>
+  </g>
+  <g>
+    <rect x="450" y="650" width="300" height="132" rx="14" fill="#172b45"/>
+    <text x="472" y="689" class="node-title" style="fill: #ffffff">Shared state</text>
+    <text x="472" y="719" class="node-detail" style="fill: #dbe7f5">Field storage + transaction tokens</text>
+    <text x="472" y="744" class="node-detail" style="fill: #dbe7f5">Three weak facade caches</text>
+    <text x="472" y="768" class="node-detail" style="fill: #dbe7f5">No strong back-edge to a facade</text>
+  </g>
+  <g>
+    <rect x="450" y="870" width="300" height="85" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="472" y="908" class="node-title">Transaction manager</text>
+    <text x="472" y="937" class="node-detail">May be shared by many states</text>
+  </g>
+  <text x="40" y="993" class="subtitle">Releasing default removes its strong cache edges. Other client references can still retain views.</text>
+  <text x="40" y="1017" class="edge-note">Active transaction membership and user-defined payload references are outside this diagram.</text>
+</svg>

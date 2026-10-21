@@ -6,6 +6,8 @@
   with `mutable=True` and the `static` compatibility alias.
 - [API guide](../docs/ManagedContextApiDraft.md): facade, assignment, and
   transaction model; proposed syntax is labeled separately.
+- [Facade ownership](../docs/FacadeOwnership.md): SVG reference graph, weak
+  state caches, strong default caches, and facade collection conditions.
 - [Field-kind matrix](YidlLifecycleFieldKindMatrix.md): storage and policy
   reference. Check the implementation/goldens when an older row disagrees.
 - [Transaction scope ownership](TransactionScopeOwnership.md): implemented
