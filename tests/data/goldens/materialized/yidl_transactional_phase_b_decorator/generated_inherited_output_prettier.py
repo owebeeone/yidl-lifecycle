@@ -12,6 +12,7 @@ def build_lifecycle_class(
     *,
     _B_lifecycle_definition,
     _B_annotations,
+    _B_init_annotations,
     _B_tx_keys,
     _B_plain_default,
     _B_seed_default,
@@ -442,10 +443,10 @@ def build_lifecycle_class(
 
         def __init__(
             self,
-            plain: "int" = _B_plain_default,
-            seed: "int" = _B_seed_default,
-            v1: "int" = _B_v1_default,
-            v2: "int" = _B_v2_default,
+            plain=_B_plain_default,
+            seed=_B_seed_default,
+            v1=_B_v1_default,
+            v2=_B_v2_default,
             *,
             transaction_manager=None,
         ):
@@ -471,6 +472,8 @@ def build_lifecycle_class(
             state._y_v2_working = VOID
             state._y_v2_staged = VOID
             state._y_working_tx_ids = [None for _group in _B_tx_keys]
+
+        __init__.__annotations__ = _B_init_annotations
 
     class B_Current(B_FacadeBase):
         __slots__ = ()

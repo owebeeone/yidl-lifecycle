@@ -12,6 +12,7 @@ def build_lifecycle_class(
     *,
     _Scratch_lifecycle_definition,
     _Scratch_annotations,
+    _Scratch_init_annotations,
     _Scratch_tx_keys,
     _Scratch_seed_default,
     _Scratch_label_default,
@@ -523,12 +524,12 @@ def build_lifecycle_class(
 
         def __init__(
             self,
-            seed: "int" = _Scratch_seed_default,
-            label: "str" = _Scratch_label_default,
-            marker: "str" = _Scratch_marker_default,
-            items: "list[int]" = _HAS_DEFAULT_FACTORY,
-            buffer: "list[int] | None" = _Scratch_buffer_default,
-            audit_buffer: "list[int] | None" = _Scratch_audit_buffer_default,
+            seed=_Scratch_seed_default,
+            label=_Scratch_label_default,
+            marker=_Scratch_marker_default,
+            items=_HAS_DEFAULT_FACTORY,
+            buffer=_Scratch_buffer_default,
+            audit_buffer=_Scratch_audit_buffer_default,
             *,
             transaction_manager=None,
         ):
@@ -562,6 +563,8 @@ def build_lifecycle_class(
             state._y_items_current = items
             state._y_seed_initvar = seed
             state._y_working_tx_ids = [None for _group in _Scratch_tx_keys]
+
+        __init__.__annotations__ = _Scratch_init_annotations
 
     class Scratch_Current(Scratch_FacadeBase):
         __slots__ = ()

@@ -12,6 +12,7 @@ def build_lifecycle_class(
     *,
     _CompletionChild_lifecycle_definition,
     _CompletionChild_annotations,
+    _CompletionChild_init_annotations,
     _CompletionChild_tx_keys,
     _CompletionChild_rank_default,
     _CompletionChild_control_default,
@@ -660,14 +661,14 @@ def build_lifecycle_class(
 
         def __init__(
             self,
-            rank: "int" = _CompletionChild_rank_default,
-            control: "object" = _CompletionChild_control_default,
-            count: "int" = _CompletionChild_count_default,
-            untouched: "int" = _CompletionChild_untouched_default,
-            items: "tuple[int, ...]" = _CompletionChild_items_default,
-            scratch: "list[int] | None" = _CompletionChild_scratch_default,
-            resource: "BindingBase | None" = _CompletionChild_resource_default,
-            audit: "int" = _CompletionChild_audit_default,
+            rank=_CompletionChild_rank_default,
+            control=_CompletionChild_control_default,
+            count=_CompletionChild_count_default,
+            untouched=_CompletionChild_untouched_default,
+            items=_CompletionChild_items_default,
+            scratch=_CompletionChild_scratch_default,
+            resource=_CompletionChild_resource_default,
+            audit=_CompletionChild_audit_default,
             *,
             transaction_manager=None,
         ):
@@ -708,6 +709,8 @@ def build_lifecycle_class(
             state._y_audit_working = VOID
             state._y_audit_staged = VOID
             state._y_working_tx_ids = [None for _group in _CompletionChild_tx_keys]
+
+        __init__.__annotations__ = _CompletionChild_init_annotations
 
     class CompletionChild_Current(CompletionChild_FacadeBase):
         __slots__ = ()

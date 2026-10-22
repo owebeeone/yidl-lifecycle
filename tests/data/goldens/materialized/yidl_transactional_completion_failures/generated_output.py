@@ -5,7 +5,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _CompletionChild_lifecycle_definition, _CompletionChild_annotations, _CompletionChild_tx_keys, _CompletionChild_rank_default, _CompletionChild_control_default, _CompletionChild_count_default, _CompletionChild_count_freeze, _CompletionChild_untouched_default, _CompletionChild_items_default, _CompletionChild_items_freeze, _CompletionChild_items_thaw, _CompletionChild_scratch_default, _CompletionChild_scratch_working_default_factory, _CompletionChild_resource_default, _CompletionChild_audit_default):
+def build_lifecycle_class(decorated_cls, *, _CompletionChild_lifecycle_definition, _CompletionChild_annotations, _CompletionChild_init_annotations, _CompletionChild_tx_keys, _CompletionChild_rank_default, _CompletionChild_control_default, _CompletionChild_count_default, _CompletionChild_count_freeze, _CompletionChild_untouched_default, _CompletionChild_items_default, _CompletionChild_items_freeze, _CompletionChild_items_thaw, _CompletionChild_scratch_default, _CompletionChild_scratch_working_default_factory, _CompletionChild_resource_default, _CompletionChild_audit_default):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -555,7 +555,7 @@ def build_lifecycle_class(decorated_cls, *, _CompletionChild_lifecycle_definitio
             state._y_ensure_working_transaction(1)
             state._y_audit_working = next_value
 
-        def __init__(self, rank: 'int'=_CompletionChild_rank_default, control: 'object'=_CompletionChild_control_default, count: 'int'=_CompletionChild_count_default, untouched: 'int'=_CompletionChild_untouched_default, items: 'tuple[int, ...]'=_CompletionChild_items_default, scratch: 'list[int] | None'=_CompletionChild_scratch_default, resource: 'BindingBase | None'=_CompletionChild_resource_default, audit: 'int'=_CompletionChild_audit_default, *, transaction_manager=None):
+        def __init__(self, rank=_CompletionChild_rank_default, control=_CompletionChild_control_default, count=_CompletionChild_count_default, untouched=_CompletionChild_untouched_default, items=_CompletionChild_items_default, scratch=_CompletionChild_scratch_default, resource=_CompletionChild_resource_default, audit=_CompletionChild_audit_default, *, transaction_manager=None):
             state = object.__new__(CompletionChild_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -585,6 +585,7 @@ def build_lifecycle_class(decorated_cls, *, _CompletionChild_lifecycle_definitio
             state._y_audit_working = VOID
             state._y_audit_staged = VOID
             state._y_working_tx_ids = [None for _group in _CompletionChild_tx_keys]
+        __init__.__annotations__ = _CompletionChild_init_annotations
 
     class CompletionChild_Current(CompletionChild_FacadeBase):
         __slots__ = ()

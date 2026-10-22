@@ -385,8 +385,7 @@ concept LifecycleDefaultFactories extends managed.LifecycleManaged {
 
     resource InitParamDefaultFactory = template $[
         def astichi_params(
-            param_name__astichi_arg__: astichi_bind_external(annotation)
-            = _HAS_DEFAULT_FACTORY
+            param_name__astichi_arg__=_HAS_DEFAULT_FACTORY
         ):
             pass
     ]$ {
@@ -497,7 +496,6 @@ concept LifecycleDefaultFactories extends managed.LifecycleManaged {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution InitVarParamDefaultFactory = InitParamDefaultFactory {
@@ -510,7 +508,6 @@ concept LifecycleDefaultFactories extends managed.LifecycleManaged {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution ManagedInitParamDefaultFactory = InitParamDefaultFactory {
@@ -523,7 +520,6 @@ concept LifecycleDefaultFactories extends managed.LifecycleManaged {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution StoredDefaultFactoryEvalInitContribution = StoredDefaultFactoryEvalInit {

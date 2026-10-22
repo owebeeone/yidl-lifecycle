@@ -500,7 +500,6 @@ concept LifecycleOwned extends transient.LifecycleTransient {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution BindingInitParamDefault = InitParamDefault {
@@ -513,7 +512,6 @@ concept LifecycleOwned extends transient.LifecycleTransient {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
         ident default_value_name = DefaultValueParamName
     }
 
@@ -527,7 +525,6 @@ concept LifecycleOwned extends transient.LifecycleTransient {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution OwnedInitParamRequired = InitParamRequired {
@@ -540,7 +537,6 @@ concept LifecycleOwned extends transient.LifecycleTransient {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution OwnedInitParamDefault = InitParamDefault {
@@ -553,7 +549,6 @@ concept LifecycleOwned extends transient.LifecycleTransient {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
         ident default_value_name = DefaultValueParamName
     }
 
@@ -567,7 +562,6 @@ concept LifecycleOwned extends transient.LifecycleTransient {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution BindingInitAssignment = BindingStateAssignment {

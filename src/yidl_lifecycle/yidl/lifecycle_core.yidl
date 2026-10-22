@@ -17,6 +17,7 @@ concept LifecycleCore {
     property WorkingFacadeClassName: str
     property LifecycleDefinitionParamName: str = ""
     property AnnotationsParamName: str = ""
+    property InitAnnotationsParamName: str = ""
     property TxKeysParamName: str = ""
     property LifecycleFieldNames: object = ()
 
@@ -73,6 +74,7 @@ concept LifecycleCore {
         WorkingFacadeClassName
         LifecycleDefinitionParamName
         AnnotationsParamName
+        InitAnnotationsParamName
         TxKeysParamName
         LifecycleFieldNames
     }
@@ -248,14 +250,13 @@ concept LifecycleCore {
     ]$
 
     resource InitParamRequired = template $[
-        def astichi_params(param_name__astichi_arg__: astichi_bind_external(annotation)):
+        def astichi_params(param_name__astichi_arg__):
             pass
     ]$
 
     resource InitParamDefault = template $[
         def astichi_params(
-            param_name__astichi_arg__: astichi_bind_external(annotation)
-            = default_value_name__astichi_arg__
+            param_name__astichi_arg__=default_value_name__astichi_arg__
         ):
             pass
     ]$
@@ -690,6 +691,11 @@ concept LifecycleCore {
                     )
                 ]
 
+            __init__.__annotations__ = astichi_pass(
+                init_annotations_name__astichi_arg__,
+                outer_bind=True,
+            )
+
 
         class current_facade_class_decl_name__astichi_arg__(
             facade_base_current_base_name__astichi_arg__
@@ -748,6 +754,18 @@ concept LifecycleCore {
         }
 
         ident value_name = AnnotationsParamName
+    }
+
+    contribution InitAnnotationsBuilderParam = BuilderParam {
+        as InitAnnotationsBuilderParam
+        index ClassOrder
+        order ClassOrder
+
+        target builder_params {
+            build /Root
+        }
+
+        ident value_name = InitAnnotationsParamName
     }
 
     contribution TxKeysBuilderParam = BuilderParam {
@@ -911,7 +929,6 @@ concept LifecycleCore {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution PlainInitParamDefault = InitParamDefault {
@@ -924,7 +941,6 @@ concept LifecycleCore {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
         ident default_value_name = DefaultValueParamName
     }
 
@@ -938,7 +954,6 @@ concept LifecycleCore {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution InitVarParamDefault = InitParamDefault {
@@ -951,7 +966,6 @@ concept LifecycleCore {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
         ident default_value_name = DefaultValueParamName
     }
 
@@ -1117,6 +1131,10 @@ concept LifecycleCore {
         default -> AnnotationsBuilderParam
     }
 
+    matcher InitAnnotationsBuilderParamContributions(lifecycle_class: Classes) -> contribution {
+        default -> InitAnnotationsBuilderParam
+    }
+
     matcher TxKeysBuilderParamContributions(lifecycle_class: Classes) -> contribution {
         default -> TxKeysBuilderParam
     }
@@ -1254,6 +1272,7 @@ concept LifecycleCore {
         phase module_params from lifecycle_class: Classes {
             apply lifecycle_definition_params using BuilderParamContributions
             apply annotations_params using AnnotationsBuilderParamContributions
+            apply init_annotations_params using InitAnnotationsBuilderParamContributions
             apply tx_keys_params using TxKeysBuilderParamContributions
         }
 
@@ -1292,6 +1311,7 @@ concept LifecycleCore {
             ident tx_keys_for_slots_name = TxKeysParamName
             ident lifecycle_definition_name = LifecycleDefinitionParamName
             ident annotations_name = AnnotationsParamName
+            ident init_annotations_name = InitAnnotationsParamName
             external lifecycle_field_names = LifecycleFieldNames
         }
 

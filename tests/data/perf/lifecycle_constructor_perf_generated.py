@@ -24,7 +24,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _PerfLifecycle5_lifecycle_definition, _PerfLifecycle5_annotations, _PerfLifecycle5_tx_keys, _PerfLifecycle5_plain_0_default, _PerfLifecycle5_plain_1_default, _PerfLifecycle5_plain_2_default, _PerfLifecycle5_plain_3_default, _PerfLifecycle5_plain_4_default, _PerfLifecycle5_count_0_default, _PerfLifecycle5_count_1_default, _PerfLifecycle5_count_2_default, _PerfLifecycle5_count_3_default, _PerfLifecycle5_count_4_default, _PerfLifecycle5_derived_0_default_factory, _PerfLifecycle5_derived_1_default_factory, _PerfLifecycle5_derived_2_default_factory, _PerfLifecycle5_derived_3_default_factory, _PerfLifecycle5_derived_4_default_factory):
+def build_lifecycle_class(decorated_cls, *, _PerfLifecycle5_lifecycle_definition, _PerfLifecycle5_annotations, _PerfLifecycle5_init_annotations, _PerfLifecycle5_tx_keys, _PerfLifecycle5_plain_0_default, _PerfLifecycle5_plain_1_default, _PerfLifecycle5_plain_2_default, _PerfLifecycle5_plain_3_default, _PerfLifecycle5_plain_4_default, _PerfLifecycle5_count_0_default, _PerfLifecycle5_count_1_default, _PerfLifecycle5_count_2_default, _PerfLifecycle5_count_3_default, _PerfLifecycle5_count_4_default, _PerfLifecycle5_derived_0_default_factory, _PerfLifecycle5_derived_1_default_factory, _PerfLifecycle5_derived_2_default_factory, _PerfLifecycle5_derived_3_default_factory, _PerfLifecycle5_derived_4_default_factory):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -90,12 +90,13 @@ def build_lifecycle_class(decorated_cls, *, _PerfLifecycle5_lifecycle_definition
 
         def _y_require_active_transaction(self, tx_index):
             tx_key = self.__yidl_tx_index_to_key__[tx_index]
-            transaction = self._y_transaction_manager.active_transaction_for(tx_key)
+            group_manager = self._y_transaction_manager._get_group_manager(tx_key)
+            transaction = group_manager.active_transaction
             if transaction is None:
                 if self._y_working_tx_ids[tx_index] is not None:
                     raise RuntimeError('stale yidl working value without an active transaction')
                 raise RuntimeError('writes require an active yidl transaction')
-            self._y_transaction_manager._require_candidate_write(self, tx_key)
+            group_manager._require_candidate_write(self, tx_key)
             existing_tx_id = self._y_working_tx_ids[tx_index]
             if existing_tx_id is not None and existing_tx_id != transaction.tx_id:
                 raise RuntimeError('working value belongs to a different yidl transaction')
@@ -634,7 +635,7 @@ def build_lifecycle_class(decorated_cls, *, _PerfLifecycle5_lifecycle_definition
             state._y_ensure_working_transaction(0)
             state._y_derived_4_working = next_value
 
-        def __init__(self, plain_0: 'int'=_PerfLifecycle5_plain_0_default, plain_1: 'int'=_PerfLifecycle5_plain_1_default, plain_2: 'int'=_PerfLifecycle5_plain_2_default, plain_3: 'int'=_PerfLifecycle5_plain_3_default, plain_4: 'int'=_PerfLifecycle5_plain_4_default, count_0: 'int'=_PerfLifecycle5_count_0_default, count_1: 'int'=_PerfLifecycle5_count_1_default, count_2: 'int'=_PerfLifecycle5_count_2_default, count_3: 'int'=_PerfLifecycle5_count_3_default, count_4: 'int'=_PerfLifecycle5_count_4_default, derived_0: 'int'=_HAS_DEFAULT_FACTORY, derived_1: 'int'=_HAS_DEFAULT_FACTORY, derived_2: 'int'=_HAS_DEFAULT_FACTORY, derived_3: 'int'=_HAS_DEFAULT_FACTORY, derived_4: 'int'=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
+        def __init__(self, plain_0=_PerfLifecycle5_plain_0_default, plain_1=_PerfLifecycle5_plain_1_default, plain_2=_PerfLifecycle5_plain_2_default, plain_3=_PerfLifecycle5_plain_3_default, plain_4=_PerfLifecycle5_plain_4_default, count_0=_PerfLifecycle5_count_0_default, count_1=_PerfLifecycle5_count_1_default, count_2=_PerfLifecycle5_count_2_default, count_3=_PerfLifecycle5_count_3_default, count_4=_PerfLifecycle5_count_4_default, derived_0=_HAS_DEFAULT_FACTORY, derived_1=_HAS_DEFAULT_FACTORY, derived_2=_HAS_DEFAULT_FACTORY, derived_3=_HAS_DEFAULT_FACTORY, derived_4=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
             state = object.__new__(PerfLifecycle5_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -689,6 +690,7 @@ def build_lifecycle_class(decorated_cls, *, _PerfLifecycle5_lifecycle_definition
                 derived_4 = _PerfLifecycle5_derived_4_default_factory(count_4=self.count_4)
             state._y_derived_4_current = derived_4
             state._y_working_tx_ids = [None for _group in _PerfLifecycle5_tx_keys]
+        __init__.__annotations__ = _PerfLifecycle5_init_annotations
 
     class PerfLifecycle5_Current(PerfLifecycle5_FacadeBase):
         __slots__ = ()
@@ -1004,25 +1006,27 @@ class _PerfLifecycle5User:
     pass
 
 def _make_PerfLifecycle5_kwargs():
+    annotations = {
+        'plain_0': 'int',
+        'plain_1': 'int',
+        'plain_2': 'int',
+        'plain_3': 'int',
+        'plain_4': 'int',
+        'count_0': 'int',
+        'count_1': 'int',
+        'count_2': 'int',
+        'count_3': 'int',
+        'count_4': 'int',
+        'derived_0': 'int',
+        'derived_1': 'int',
+        'derived_2': 'int',
+        'derived_3': 'int',
+        'derived_4': 'int',
+    }
     return {
         '_PerfLifecycle5_lifecycle_definition': {},
-        '_PerfLifecycle5_annotations': {
-            'plain_0': 'int',
-            'plain_1': 'int',
-            'plain_2': 'int',
-            'plain_3': 'int',
-            'plain_4': 'int',
-            'count_0': 'int',
-            'count_1': 'int',
-            'count_2': 'int',
-            'count_3': 'int',
-            'count_4': 'int',
-            'derived_0': 'int',
-            'derived_1': 'int',
-            'derived_2': 'int',
-            'derived_3': 'int',
-            'derived_4': 'int',
-        },
+        '_PerfLifecycle5_annotations': annotations,
+        '_PerfLifecycle5_init_annotations': dict(annotations),
         '_PerfLifecycle5_tx_keys': (DEFAULT_TRANSACTION,),
         '_PerfLifecycle5_plain_0_default': 0,
         '_PerfLifecycle5_plain_1_default': 1,
@@ -1054,7 +1058,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _PerfLifecycle10_lifecycle_definition, _PerfLifecycle10_annotations, _PerfLifecycle10_tx_keys, _PerfLifecycle10_plain_0_default, _PerfLifecycle10_plain_1_default, _PerfLifecycle10_plain_2_default, _PerfLifecycle10_plain_3_default, _PerfLifecycle10_plain_4_default, _PerfLifecycle10_plain_5_default, _PerfLifecycle10_plain_6_default, _PerfLifecycle10_plain_7_default, _PerfLifecycle10_plain_8_default, _PerfLifecycle10_plain_9_default, _PerfLifecycle10_count_0_default, _PerfLifecycle10_count_1_default, _PerfLifecycle10_count_2_default, _PerfLifecycle10_count_3_default, _PerfLifecycle10_count_4_default, _PerfLifecycle10_count_5_default, _PerfLifecycle10_count_6_default, _PerfLifecycle10_count_7_default, _PerfLifecycle10_count_8_default, _PerfLifecycle10_count_9_default, _PerfLifecycle10_derived_0_default_factory, _PerfLifecycle10_derived_1_default_factory, _PerfLifecycle10_derived_2_default_factory, _PerfLifecycle10_derived_3_default_factory, _PerfLifecycle10_derived_4_default_factory, _PerfLifecycle10_derived_5_default_factory, _PerfLifecycle10_derived_6_default_factory, _PerfLifecycle10_derived_7_default_factory, _PerfLifecycle10_derived_8_default_factory, _PerfLifecycle10_derived_9_default_factory):
+def build_lifecycle_class(decorated_cls, *, _PerfLifecycle10_lifecycle_definition, _PerfLifecycle10_annotations, _PerfLifecycle10_init_annotations, _PerfLifecycle10_tx_keys, _PerfLifecycle10_plain_0_default, _PerfLifecycle10_plain_1_default, _PerfLifecycle10_plain_2_default, _PerfLifecycle10_plain_3_default, _PerfLifecycle10_plain_4_default, _PerfLifecycle10_plain_5_default, _PerfLifecycle10_plain_6_default, _PerfLifecycle10_plain_7_default, _PerfLifecycle10_plain_8_default, _PerfLifecycle10_plain_9_default, _PerfLifecycle10_count_0_default, _PerfLifecycle10_count_1_default, _PerfLifecycle10_count_2_default, _PerfLifecycle10_count_3_default, _PerfLifecycle10_count_4_default, _PerfLifecycle10_count_5_default, _PerfLifecycle10_count_6_default, _PerfLifecycle10_count_7_default, _PerfLifecycle10_count_8_default, _PerfLifecycle10_count_9_default, _PerfLifecycle10_derived_0_default_factory, _PerfLifecycle10_derived_1_default_factory, _PerfLifecycle10_derived_2_default_factory, _PerfLifecycle10_derived_3_default_factory, _PerfLifecycle10_derived_4_default_factory, _PerfLifecycle10_derived_5_default_factory, _PerfLifecycle10_derived_6_default_factory, _PerfLifecycle10_derived_7_default_factory, _PerfLifecycle10_derived_8_default_factory, _PerfLifecycle10_derived_9_default_factory):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -1120,12 +1124,13 @@ def build_lifecycle_class(decorated_cls, *, _PerfLifecycle10_lifecycle_definitio
 
         def _y_require_active_transaction(self, tx_index):
             tx_key = self.__yidl_tx_index_to_key__[tx_index]
-            transaction = self._y_transaction_manager.active_transaction_for(tx_key)
+            group_manager = self._y_transaction_manager._get_group_manager(tx_key)
+            transaction = group_manager.active_transaction
             if transaction is None:
                 if self._y_working_tx_ids[tx_index] is not None:
                     raise RuntimeError('stale yidl working value without an active transaction')
                 raise RuntimeError('writes require an active yidl transaction')
-            self._y_transaction_manager._require_candidate_write(self, tx_key)
+            group_manager._require_candidate_write(self, tx_key)
             existing_tx_id = self._y_working_tx_ids[tx_index]
             if existing_tx_id is not None and existing_tx_id != transaction.tx_id:
                 raise RuntimeError('working value belongs to a different yidl transaction')
@@ -1994,7 +1999,7 @@ def build_lifecycle_class(decorated_cls, *, _PerfLifecycle10_lifecycle_definitio
             state._y_ensure_working_transaction(0)
             state._y_derived_9_working = next_value
 
-        def __init__(self, plain_0: 'int'=_PerfLifecycle10_plain_0_default, plain_1: 'int'=_PerfLifecycle10_plain_1_default, plain_2: 'int'=_PerfLifecycle10_plain_2_default, plain_3: 'int'=_PerfLifecycle10_plain_3_default, plain_4: 'int'=_PerfLifecycle10_plain_4_default, plain_5: 'int'=_PerfLifecycle10_plain_5_default, plain_6: 'int'=_PerfLifecycle10_plain_6_default, plain_7: 'int'=_PerfLifecycle10_plain_7_default, plain_8: 'int'=_PerfLifecycle10_plain_8_default, plain_9: 'int'=_PerfLifecycle10_plain_9_default, count_0: 'int'=_PerfLifecycle10_count_0_default, count_1: 'int'=_PerfLifecycle10_count_1_default, count_2: 'int'=_PerfLifecycle10_count_2_default, count_3: 'int'=_PerfLifecycle10_count_3_default, count_4: 'int'=_PerfLifecycle10_count_4_default, count_5: 'int'=_PerfLifecycle10_count_5_default, count_6: 'int'=_PerfLifecycle10_count_6_default, count_7: 'int'=_PerfLifecycle10_count_7_default, count_8: 'int'=_PerfLifecycle10_count_8_default, count_9: 'int'=_PerfLifecycle10_count_9_default, derived_0: 'int'=_HAS_DEFAULT_FACTORY, derived_1: 'int'=_HAS_DEFAULT_FACTORY, derived_2: 'int'=_HAS_DEFAULT_FACTORY, derived_3: 'int'=_HAS_DEFAULT_FACTORY, derived_4: 'int'=_HAS_DEFAULT_FACTORY, derived_5: 'int'=_HAS_DEFAULT_FACTORY, derived_6: 'int'=_HAS_DEFAULT_FACTORY, derived_7: 'int'=_HAS_DEFAULT_FACTORY, derived_8: 'int'=_HAS_DEFAULT_FACTORY, derived_9: 'int'=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
+        def __init__(self, plain_0=_PerfLifecycle10_plain_0_default, plain_1=_PerfLifecycle10_plain_1_default, plain_2=_PerfLifecycle10_plain_2_default, plain_3=_PerfLifecycle10_plain_3_default, plain_4=_PerfLifecycle10_plain_4_default, plain_5=_PerfLifecycle10_plain_5_default, plain_6=_PerfLifecycle10_plain_6_default, plain_7=_PerfLifecycle10_plain_7_default, plain_8=_PerfLifecycle10_plain_8_default, plain_9=_PerfLifecycle10_plain_9_default, count_0=_PerfLifecycle10_count_0_default, count_1=_PerfLifecycle10_count_1_default, count_2=_PerfLifecycle10_count_2_default, count_3=_PerfLifecycle10_count_3_default, count_4=_PerfLifecycle10_count_4_default, count_5=_PerfLifecycle10_count_5_default, count_6=_PerfLifecycle10_count_6_default, count_7=_PerfLifecycle10_count_7_default, count_8=_PerfLifecycle10_count_8_default, count_9=_PerfLifecycle10_count_9_default, derived_0=_HAS_DEFAULT_FACTORY, derived_1=_HAS_DEFAULT_FACTORY, derived_2=_HAS_DEFAULT_FACTORY, derived_3=_HAS_DEFAULT_FACTORY, derived_4=_HAS_DEFAULT_FACTORY, derived_5=_HAS_DEFAULT_FACTORY, derived_6=_HAS_DEFAULT_FACTORY, derived_7=_HAS_DEFAULT_FACTORY, derived_8=_HAS_DEFAULT_FACTORY, derived_9=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
             state = object.__new__(PerfLifecycle10_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -2094,6 +2099,7 @@ def build_lifecycle_class(decorated_cls, *, _PerfLifecycle10_lifecycle_definitio
                 derived_9 = _PerfLifecycle10_derived_9_default_factory(count_9=self.count_9)
             state._y_derived_9_current = derived_9
             state._y_working_tx_ids = [None for _group in _PerfLifecycle10_tx_keys]
+        __init__.__annotations__ = _PerfLifecycle10_init_annotations
 
     class PerfLifecycle10_Current(PerfLifecycle10_FacadeBase):
         __slots__ = ()
@@ -2709,40 +2715,42 @@ class _PerfLifecycle10User:
     pass
 
 def _make_PerfLifecycle10_kwargs():
+    annotations = {
+        'plain_0': 'int',
+        'plain_1': 'int',
+        'plain_2': 'int',
+        'plain_3': 'int',
+        'plain_4': 'int',
+        'plain_5': 'int',
+        'plain_6': 'int',
+        'plain_7': 'int',
+        'plain_8': 'int',
+        'plain_9': 'int',
+        'count_0': 'int',
+        'count_1': 'int',
+        'count_2': 'int',
+        'count_3': 'int',
+        'count_4': 'int',
+        'count_5': 'int',
+        'count_6': 'int',
+        'count_7': 'int',
+        'count_8': 'int',
+        'count_9': 'int',
+        'derived_0': 'int',
+        'derived_1': 'int',
+        'derived_2': 'int',
+        'derived_3': 'int',
+        'derived_4': 'int',
+        'derived_5': 'int',
+        'derived_6': 'int',
+        'derived_7': 'int',
+        'derived_8': 'int',
+        'derived_9': 'int',
+    }
     return {
         '_PerfLifecycle10_lifecycle_definition': {},
-        '_PerfLifecycle10_annotations': {
-            'plain_0': 'int',
-            'plain_1': 'int',
-            'plain_2': 'int',
-            'plain_3': 'int',
-            'plain_4': 'int',
-            'plain_5': 'int',
-            'plain_6': 'int',
-            'plain_7': 'int',
-            'plain_8': 'int',
-            'plain_9': 'int',
-            'count_0': 'int',
-            'count_1': 'int',
-            'count_2': 'int',
-            'count_3': 'int',
-            'count_4': 'int',
-            'count_5': 'int',
-            'count_6': 'int',
-            'count_7': 'int',
-            'count_8': 'int',
-            'count_9': 'int',
-            'derived_0': 'int',
-            'derived_1': 'int',
-            'derived_2': 'int',
-            'derived_3': 'int',
-            'derived_4': 'int',
-            'derived_5': 'int',
-            'derived_6': 'int',
-            'derived_7': 'int',
-            'derived_8': 'int',
-            'derived_9': 'int',
-        },
+        '_PerfLifecycle10_annotations': annotations,
+        '_PerfLifecycle10_init_annotations': dict(annotations),
         '_PerfLifecycle10_tx_keys': (DEFAULT_TRANSACTION,),
         '_PerfLifecycle10_plain_0_default': 0,
         '_PerfLifecycle10_plain_1_default': 1,
@@ -2789,7 +2797,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _PerfLifecycle15_lifecycle_definition, _PerfLifecycle15_annotations, _PerfLifecycle15_tx_keys, _PerfLifecycle15_plain_0_default, _PerfLifecycle15_plain_1_default, _PerfLifecycle15_plain_2_default, _PerfLifecycle15_plain_3_default, _PerfLifecycle15_plain_4_default, _PerfLifecycle15_plain_5_default, _PerfLifecycle15_plain_6_default, _PerfLifecycle15_plain_7_default, _PerfLifecycle15_plain_8_default, _PerfLifecycle15_plain_9_default, _PerfLifecycle15_plain_10_default, _PerfLifecycle15_plain_11_default, _PerfLifecycle15_plain_12_default, _PerfLifecycle15_plain_13_default, _PerfLifecycle15_plain_14_default, _PerfLifecycle15_count_0_default, _PerfLifecycle15_count_1_default, _PerfLifecycle15_count_2_default, _PerfLifecycle15_count_3_default, _PerfLifecycle15_count_4_default, _PerfLifecycle15_count_5_default, _PerfLifecycle15_count_6_default, _PerfLifecycle15_count_7_default, _PerfLifecycle15_count_8_default, _PerfLifecycle15_count_9_default, _PerfLifecycle15_count_10_default, _PerfLifecycle15_count_11_default, _PerfLifecycle15_count_12_default, _PerfLifecycle15_count_13_default, _PerfLifecycle15_count_14_default, _PerfLifecycle15_derived_0_default_factory, _PerfLifecycle15_derived_1_default_factory, _PerfLifecycle15_derived_2_default_factory, _PerfLifecycle15_derived_3_default_factory, _PerfLifecycle15_derived_4_default_factory, _PerfLifecycle15_derived_5_default_factory, _PerfLifecycle15_derived_6_default_factory, _PerfLifecycle15_derived_7_default_factory, _PerfLifecycle15_derived_8_default_factory, _PerfLifecycle15_derived_9_default_factory, _PerfLifecycle15_derived_10_default_factory, _PerfLifecycle15_derived_11_default_factory, _PerfLifecycle15_derived_12_default_factory, _PerfLifecycle15_derived_13_default_factory, _PerfLifecycle15_derived_14_default_factory):
+def build_lifecycle_class(decorated_cls, *, _PerfLifecycle15_lifecycle_definition, _PerfLifecycle15_annotations, _PerfLifecycle15_init_annotations, _PerfLifecycle15_tx_keys, _PerfLifecycle15_plain_0_default, _PerfLifecycle15_plain_1_default, _PerfLifecycle15_plain_2_default, _PerfLifecycle15_plain_3_default, _PerfLifecycle15_plain_4_default, _PerfLifecycle15_plain_5_default, _PerfLifecycle15_plain_6_default, _PerfLifecycle15_plain_7_default, _PerfLifecycle15_plain_8_default, _PerfLifecycle15_plain_9_default, _PerfLifecycle15_plain_10_default, _PerfLifecycle15_plain_11_default, _PerfLifecycle15_plain_12_default, _PerfLifecycle15_plain_13_default, _PerfLifecycle15_plain_14_default, _PerfLifecycle15_count_0_default, _PerfLifecycle15_count_1_default, _PerfLifecycle15_count_2_default, _PerfLifecycle15_count_3_default, _PerfLifecycle15_count_4_default, _PerfLifecycle15_count_5_default, _PerfLifecycle15_count_6_default, _PerfLifecycle15_count_7_default, _PerfLifecycle15_count_8_default, _PerfLifecycle15_count_9_default, _PerfLifecycle15_count_10_default, _PerfLifecycle15_count_11_default, _PerfLifecycle15_count_12_default, _PerfLifecycle15_count_13_default, _PerfLifecycle15_count_14_default, _PerfLifecycle15_derived_0_default_factory, _PerfLifecycle15_derived_1_default_factory, _PerfLifecycle15_derived_2_default_factory, _PerfLifecycle15_derived_3_default_factory, _PerfLifecycle15_derived_4_default_factory, _PerfLifecycle15_derived_5_default_factory, _PerfLifecycle15_derived_6_default_factory, _PerfLifecycle15_derived_7_default_factory, _PerfLifecycle15_derived_8_default_factory, _PerfLifecycle15_derived_9_default_factory, _PerfLifecycle15_derived_10_default_factory, _PerfLifecycle15_derived_11_default_factory, _PerfLifecycle15_derived_12_default_factory, _PerfLifecycle15_derived_13_default_factory, _PerfLifecycle15_derived_14_default_factory):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -2855,12 +2863,13 @@ def build_lifecycle_class(decorated_cls, *, _PerfLifecycle15_lifecycle_definitio
 
         def _y_require_active_transaction(self, tx_index):
             tx_key = self.__yidl_tx_index_to_key__[tx_index]
-            transaction = self._y_transaction_manager.active_transaction_for(tx_key)
+            group_manager = self._y_transaction_manager._get_group_manager(tx_key)
+            transaction = group_manager.active_transaction
             if transaction is None:
                 if self._y_working_tx_ids[tx_index] is not None:
                     raise RuntimeError('stale yidl working value without an active transaction')
                 raise RuntimeError('writes require an active yidl transaction')
-            self._y_transaction_manager._require_candidate_write(self, tx_key)
+            group_manager._require_candidate_write(self, tx_key)
             existing_tx_id = self._y_working_tx_ids[tx_index]
             if existing_tx_id is not None and existing_tx_id != transaction.tx_id:
                 raise RuntimeError('working value belongs to a different yidl transaction')
@@ -4059,7 +4068,7 @@ def build_lifecycle_class(decorated_cls, *, _PerfLifecycle15_lifecycle_definitio
             state._y_ensure_working_transaction(0)
             state._y_derived_14_working = next_value
 
-        def __init__(self, plain_0: 'int'=_PerfLifecycle15_plain_0_default, plain_1: 'int'=_PerfLifecycle15_plain_1_default, plain_2: 'int'=_PerfLifecycle15_plain_2_default, plain_3: 'int'=_PerfLifecycle15_plain_3_default, plain_4: 'int'=_PerfLifecycle15_plain_4_default, plain_5: 'int'=_PerfLifecycle15_plain_5_default, plain_6: 'int'=_PerfLifecycle15_plain_6_default, plain_7: 'int'=_PerfLifecycle15_plain_7_default, plain_8: 'int'=_PerfLifecycle15_plain_8_default, plain_9: 'int'=_PerfLifecycle15_plain_9_default, plain_10: 'int'=_PerfLifecycle15_plain_10_default, plain_11: 'int'=_PerfLifecycle15_plain_11_default, plain_12: 'int'=_PerfLifecycle15_plain_12_default, plain_13: 'int'=_PerfLifecycle15_plain_13_default, plain_14: 'int'=_PerfLifecycle15_plain_14_default, count_0: 'int'=_PerfLifecycle15_count_0_default, count_1: 'int'=_PerfLifecycle15_count_1_default, count_2: 'int'=_PerfLifecycle15_count_2_default, count_3: 'int'=_PerfLifecycle15_count_3_default, count_4: 'int'=_PerfLifecycle15_count_4_default, count_5: 'int'=_PerfLifecycle15_count_5_default, count_6: 'int'=_PerfLifecycle15_count_6_default, count_7: 'int'=_PerfLifecycle15_count_7_default, count_8: 'int'=_PerfLifecycle15_count_8_default, count_9: 'int'=_PerfLifecycle15_count_9_default, count_10: 'int'=_PerfLifecycle15_count_10_default, count_11: 'int'=_PerfLifecycle15_count_11_default, count_12: 'int'=_PerfLifecycle15_count_12_default, count_13: 'int'=_PerfLifecycle15_count_13_default, count_14: 'int'=_PerfLifecycle15_count_14_default, derived_0: 'int'=_HAS_DEFAULT_FACTORY, derived_1: 'int'=_HAS_DEFAULT_FACTORY, derived_2: 'int'=_HAS_DEFAULT_FACTORY, derived_3: 'int'=_HAS_DEFAULT_FACTORY, derived_4: 'int'=_HAS_DEFAULT_FACTORY, derived_5: 'int'=_HAS_DEFAULT_FACTORY, derived_6: 'int'=_HAS_DEFAULT_FACTORY, derived_7: 'int'=_HAS_DEFAULT_FACTORY, derived_8: 'int'=_HAS_DEFAULT_FACTORY, derived_9: 'int'=_HAS_DEFAULT_FACTORY, derived_10: 'int'=_HAS_DEFAULT_FACTORY, derived_11: 'int'=_HAS_DEFAULT_FACTORY, derived_12: 'int'=_HAS_DEFAULT_FACTORY, derived_13: 'int'=_HAS_DEFAULT_FACTORY, derived_14: 'int'=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
+        def __init__(self, plain_0=_PerfLifecycle15_plain_0_default, plain_1=_PerfLifecycle15_plain_1_default, plain_2=_PerfLifecycle15_plain_2_default, plain_3=_PerfLifecycle15_plain_3_default, plain_4=_PerfLifecycle15_plain_4_default, plain_5=_PerfLifecycle15_plain_5_default, plain_6=_PerfLifecycle15_plain_6_default, plain_7=_PerfLifecycle15_plain_7_default, plain_8=_PerfLifecycle15_plain_8_default, plain_9=_PerfLifecycle15_plain_9_default, plain_10=_PerfLifecycle15_plain_10_default, plain_11=_PerfLifecycle15_plain_11_default, plain_12=_PerfLifecycle15_plain_12_default, plain_13=_PerfLifecycle15_plain_13_default, plain_14=_PerfLifecycle15_plain_14_default, count_0=_PerfLifecycle15_count_0_default, count_1=_PerfLifecycle15_count_1_default, count_2=_PerfLifecycle15_count_2_default, count_3=_PerfLifecycle15_count_3_default, count_4=_PerfLifecycle15_count_4_default, count_5=_PerfLifecycle15_count_5_default, count_6=_PerfLifecycle15_count_6_default, count_7=_PerfLifecycle15_count_7_default, count_8=_PerfLifecycle15_count_8_default, count_9=_PerfLifecycle15_count_9_default, count_10=_PerfLifecycle15_count_10_default, count_11=_PerfLifecycle15_count_11_default, count_12=_PerfLifecycle15_count_12_default, count_13=_PerfLifecycle15_count_13_default, count_14=_PerfLifecycle15_count_14_default, derived_0=_HAS_DEFAULT_FACTORY, derived_1=_HAS_DEFAULT_FACTORY, derived_2=_HAS_DEFAULT_FACTORY, derived_3=_HAS_DEFAULT_FACTORY, derived_4=_HAS_DEFAULT_FACTORY, derived_5=_HAS_DEFAULT_FACTORY, derived_6=_HAS_DEFAULT_FACTORY, derived_7=_HAS_DEFAULT_FACTORY, derived_8=_HAS_DEFAULT_FACTORY, derived_9=_HAS_DEFAULT_FACTORY, derived_10=_HAS_DEFAULT_FACTORY, derived_11=_HAS_DEFAULT_FACTORY, derived_12=_HAS_DEFAULT_FACTORY, derived_13=_HAS_DEFAULT_FACTORY, derived_14=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
             state = object.__new__(PerfLifecycle15_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -4204,6 +4213,7 @@ def build_lifecycle_class(decorated_cls, *, _PerfLifecycle15_lifecycle_definitio
                 derived_14 = _PerfLifecycle15_derived_14_default_factory(count_14=self.count_14)
             state._y_derived_14_current = derived_14
             state._y_working_tx_ids = [None for _group in _PerfLifecycle15_tx_keys]
+        __init__.__annotations__ = _PerfLifecycle15_init_annotations
 
     class PerfLifecycle15_Current(PerfLifecycle15_FacadeBase):
         __slots__ = ()
@@ -5119,55 +5129,57 @@ class _PerfLifecycle15User:
     pass
 
 def _make_PerfLifecycle15_kwargs():
+    annotations = {
+        'plain_0': 'int',
+        'plain_1': 'int',
+        'plain_2': 'int',
+        'plain_3': 'int',
+        'plain_4': 'int',
+        'plain_5': 'int',
+        'plain_6': 'int',
+        'plain_7': 'int',
+        'plain_8': 'int',
+        'plain_9': 'int',
+        'plain_10': 'int',
+        'plain_11': 'int',
+        'plain_12': 'int',
+        'plain_13': 'int',
+        'plain_14': 'int',
+        'count_0': 'int',
+        'count_1': 'int',
+        'count_2': 'int',
+        'count_3': 'int',
+        'count_4': 'int',
+        'count_5': 'int',
+        'count_6': 'int',
+        'count_7': 'int',
+        'count_8': 'int',
+        'count_9': 'int',
+        'count_10': 'int',
+        'count_11': 'int',
+        'count_12': 'int',
+        'count_13': 'int',
+        'count_14': 'int',
+        'derived_0': 'int',
+        'derived_1': 'int',
+        'derived_2': 'int',
+        'derived_3': 'int',
+        'derived_4': 'int',
+        'derived_5': 'int',
+        'derived_6': 'int',
+        'derived_7': 'int',
+        'derived_8': 'int',
+        'derived_9': 'int',
+        'derived_10': 'int',
+        'derived_11': 'int',
+        'derived_12': 'int',
+        'derived_13': 'int',
+        'derived_14': 'int',
+    }
     return {
         '_PerfLifecycle15_lifecycle_definition': {},
-        '_PerfLifecycle15_annotations': {
-            'plain_0': 'int',
-            'plain_1': 'int',
-            'plain_2': 'int',
-            'plain_3': 'int',
-            'plain_4': 'int',
-            'plain_5': 'int',
-            'plain_6': 'int',
-            'plain_7': 'int',
-            'plain_8': 'int',
-            'plain_9': 'int',
-            'plain_10': 'int',
-            'plain_11': 'int',
-            'plain_12': 'int',
-            'plain_13': 'int',
-            'plain_14': 'int',
-            'count_0': 'int',
-            'count_1': 'int',
-            'count_2': 'int',
-            'count_3': 'int',
-            'count_4': 'int',
-            'count_5': 'int',
-            'count_6': 'int',
-            'count_7': 'int',
-            'count_8': 'int',
-            'count_9': 'int',
-            'count_10': 'int',
-            'count_11': 'int',
-            'count_12': 'int',
-            'count_13': 'int',
-            'count_14': 'int',
-            'derived_0': 'int',
-            'derived_1': 'int',
-            'derived_2': 'int',
-            'derived_3': 'int',
-            'derived_4': 'int',
-            'derived_5': 'int',
-            'derived_6': 'int',
-            'derived_7': 'int',
-            'derived_8': 'int',
-            'derived_9': 'int',
-            'derived_10': 'int',
-            'derived_11': 'int',
-            'derived_12': 'int',
-            'derived_13': 'int',
-            'derived_14': 'int',
-        },
+        '_PerfLifecycle15_annotations': annotations,
+        '_PerfLifecycle15_init_annotations': dict(annotations),
         '_PerfLifecycle15_tx_keys': (DEFAULT_TRANSACTION,),
         '_PerfLifecycle15_plain_0_default': 0,
         '_PerfLifecycle15_plain_1_default': 1,

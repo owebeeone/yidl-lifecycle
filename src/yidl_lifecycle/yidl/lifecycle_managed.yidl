@@ -693,7 +693,6 @@ concept LifecycleManaged extends core.LifecycleCore {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
         ident default_value_name = DefaultValueParamName
     }
 
@@ -707,7 +706,6 @@ concept LifecycleManaged extends core.LifecycleCore {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution ManagedCurrentInitAssignment = ManagedCurrentStateAssignment {

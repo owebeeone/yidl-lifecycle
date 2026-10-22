@@ -23,6 +23,7 @@ _CLASS_KEYS = frozenset(
         "working_facade_class_name",
         "lifecycle_definition_param_name",
         "annotations_param_name",
+        "init_annotations_param_name",
         "tx_keys_param_name",
         "lifecycle_field_names",
     }

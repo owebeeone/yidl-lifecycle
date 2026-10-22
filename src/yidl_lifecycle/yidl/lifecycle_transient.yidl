@@ -362,7 +362,6 @@ concept LifecycleTransient extends default_factories.LifecycleDefaultFactories {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution TransientInitParamDefault = InitParamDefault {
@@ -375,7 +374,6 @@ concept LifecycleTransient extends default_factories.LifecycleDefaultFactories {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
         ident default_value_name = DefaultValueParamName
     }
 
@@ -389,7 +387,6 @@ concept LifecycleTransient extends default_factories.LifecycleDefaultFactories {
         }
 
         ident param_name = FieldName
-        external annotation = Annotation
     }
 
     contribution TransientCurrentInitAssignment = PlainStateAssignment {

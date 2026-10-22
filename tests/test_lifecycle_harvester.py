@@ -50,6 +50,7 @@ def test_harvests_phase_a_compatible_facts() -> None:
         "working_facade_class_name": "Counter_Working",
         "lifecycle_definition_param_name": "_Counter_lifecycle_definition",
         "annotations_param_name": "_Counter_annotations",
+        "init_annotations_param_name": "_Counter_init_annotations",
         "tx_keys_param_name": "_Counter_tx_keys",
         "lifecycle_field_names": (
             "plain",

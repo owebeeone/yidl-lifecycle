@@ -12,6 +12,7 @@ def build_lifecycle_class(
     *,
     _Counter_lifecycle_definition,
     _Counter_annotations,
+    _Counter_init_annotations,
     _Counter_tx_keys,
     _Counter_plain_default,
     _Counter_seed_default,
@@ -302,8 +303,8 @@ def build_lifecycle_class(
 
         def __init__(
             self,
-            plain: "int" = _Counter_plain_default,
-            seed: "int" = _Counter_seed_default,
+            plain=_Counter_plain_default,
+            seed=_Counter_seed_default,
             *,
             transaction_manager=None,
         ):
@@ -325,6 +326,8 @@ def build_lifecycle_class(
             state._y_working_ref = None
             state._y_plain_value = plain
             state._y_working_tx_ids = [None for _group in _Counter_tx_keys]
+
+        __init__.__annotations__ = _Counter_init_annotations
 
     class Counter_Current(Counter_FacadeBase):
         __slots__ = ()

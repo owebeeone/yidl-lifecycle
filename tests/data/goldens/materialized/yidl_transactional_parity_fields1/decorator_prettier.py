@@ -56,6 +56,12 @@ _LifecycleDefinitionParamNameProperty = RuntimeProperty(
 _AnnotationsParamNameProperty = RuntimeProperty(
     "AnnotationsParamName", str, default="", storage_name="annotations_param_name"
 )
+_InitAnnotationsParamNameProperty = RuntimeProperty(
+    "InitAnnotationsParamName",
+    str,
+    default="",
+    storage_name="init_annotations_param_name",
+)
 _TxKeysParamNameProperty = RuntimeProperty(
     "TxKeysParamName", str, default="", storage_name="tx_keys_param_name"
 )
@@ -473,6 +479,7 @@ _LifecycleClassSpec = RuntimeRecord(
         _WorkingFacadeClassNameProperty,
         _LifecycleDefinitionParamNameProperty,
         _AnnotationsParamNameProperty,
+        _InitAnnotationsParamNameProperty,
         _TxKeysParamNameProperty,
         _LifecycleFieldNamesProperty,
     ),
@@ -1108,6 +1115,7 @@ class LifecycleClass:
         "working_facade_class_name",
         "lifecycle_definition_param_name",
         "annotations_param_name",
+        "init_annotations_param_name",
         "tx_keys_param_name",
         "lifecycle_field_names",
     )
@@ -1122,6 +1130,7 @@ class LifecycleClass:
     working_facade_class_name: str
     lifecycle_definition_param_name: str
     annotations_param_name: str
+    init_annotations_param_name: str
     tx_keys_param_name: str
     lifecycle_field_names: object
 
@@ -1138,6 +1147,7 @@ class LifecycleClass:
         working_facade_class_name: str,
         lifecycle_definition_param_name: str = "",
         annotations_param_name: str = "",
+        init_annotations_param_name: str = "",
         tx_keys_param_name: str = "",
         lifecycle_field_names: object = (),
     ):
@@ -1190,6 +1200,14 @@ class LifecycleClass:
                 + type(annotations_param_name).__name__
             )
         object.__setattr__(self, "annotations_param_name", annotations_param_name)
+        if not isinstance(init_annotations_param_name, str):
+            raise TypeError(
+                "InitAnnotationsParamName must be str, got "
+                + type(init_annotations_param_name).__name__
+            )
+        object.__setattr__(
+            self, "init_annotations_param_name", init_annotations_param_name
+        )
         if not isinstance(tx_keys_param_name, str):
             raise TypeError(
                 "TxKeysParamName must be str, got " + type(tx_keys_param_name).__name__
@@ -1209,6 +1227,7 @@ class LifecycleClass:
             "working_facade_class_name",
             "lifecycle_definition_param_name",
             "annotations_param_name",
+            "init_annotations_param_name",
             "tx_keys_param_name",
             "lifecycle_field_names",
         ):
@@ -1234,6 +1253,9 @@ class LifecycleClass:
             + repr(self.lifecycle_definition_param_name)
         )
         pieces.append("annotations_param_name=" + repr(self.annotations_param_name))
+        pieces.append(
+            "init_annotations_param_name=" + repr(self.init_annotations_param_name)
+        )
         pieces.append("tx_keys_param_name=" + repr(self.tx_keys_param_name))
         pieces.append("lifecycle_field_names=" + repr(self.lifecycle_field_names))
         return "LifecycleClass" + "(" + ", ".join(pieces) + ")"
@@ -7157,6 +7179,9 @@ ASSEMBLY_PROPERTIES = {
     "AnnotationsParamName": _YidlSimpleNamespace(
         name="AnnotationsParamName", storage_name="annotations_param_name"
     ),
+    "InitAnnotationsParamName": _YidlSimpleNamespace(
+        name="InitAnnotationsParamName", storage_name="init_annotations_param_name"
+    ),
     "TxKeysParamName": _YidlSimpleNamespace(
         name="TxKeysParamName", storage_name="tx_keys_param_name"
     ),
@@ -7464,7 +7489,7 @@ def build_lifecycle_class(decorated_cls, builder_params__astichi_param_hole__):
     astichi_hole(function_body)
     astichi_hole(return_statement)""",
         file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-        line_number=219,
+        line_number=221,
     ),
     "BuilderParam": astichi_template(
         from_astichi_code(
@@ -7472,7 +7497,7 @@ def build_lifecycle_class(decorated_cls, builder_params__astichi_param_hole__):
 def astichi_params(*, value_name__astichi_arg__):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=237,
+            line_number=239,
         )
     ),
     "TransactionManagerParam": astichi_template(
@@ -7481,35 +7506,34 @@ def astichi_params(*, value_name__astichi_arg__):
 def astichi_params(*, transaction_manager=None):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=242,
+            line_number=244,
         )
     ),
     "StateSlotEntry": astichi_template(
         from_astichi_code(
             "astichi_bind_external(slot_name)",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=247,
+            line_number=249,
         )
     ),
     "InitParamRequired": astichi_template(
         from_astichi_code(
             """\
-def astichi_params(param_name__astichi_arg__: astichi_bind_external(annotation)):
+def astichi_params(param_name__astichi_arg__):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=251,
+            line_number=253,
         )
     ),
     "InitParamDefault": astichi_template(
         from_astichi_code(
             """\
 def astichi_params(
-    param_name__astichi_arg__: astichi_bind_external(annotation)
-    = default_value_name__astichi_arg__
+    param_name__astichi_arg__=default_value_name__astichi_arg__
 ):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=256,
+            line_number=258,
         )
     ),
     "PlainStateAssignment": astichi_template(
@@ -7520,7 +7544,7 @@ astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = astich
     outer_bind=True,
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=264,
+            line_number=265,
         )
     ),
     "InitVarLocalDefaultAssignment": astichi_template(
@@ -7531,7 +7555,7 @@ init_value_name__astichi_arg__ = astichi_pass(
     outer_bind=True,
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=271,
+            line_number=272,
         )
     ),
     "PlainProperty": astichi_template(
@@ -7545,7 +7569,7 @@ def property_getter_name__astichi_arg__(self):
 def property_setter_name__astichi_arg__(self, value):
     self._y_state.astichi_ref(external=state_slot)._ = value""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=278,
+            line_number=279,
         )
     ),
     "ClassVarDefaultAssignment": astichi_template(
@@ -7556,7 +7580,7 @@ classvar_name__astichi_arg__ = astichi_pass(
     outer_bind=True,
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=288,
+            line_number=289,
         )
     ),
     "CommitOrderKeyBranch": astichi_template(
@@ -7569,7 +7593,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         return self._y_get_default_facade().astichi_ref(external=method_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=295,
+            line_number=296,
         )
     ),
     "RequiresValidationBranch": astichi_template(
@@ -7581,7 +7605,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         return True""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=304,
+            line_number=305,
         )
     ),
     "ValidateCommitBranch": astichi_template(
@@ -7596,7 +7620,7 @@ def astichi_elif():
         if result is False:
             return False""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=312,
+            line_number=313,
         )
     ),
     "TransactionHookCall": astichi_template(
@@ -7609,7 +7633,7 @@ def astichi_elif():
     if tx_index == astichi_bind_external(tx_index_value):
         self._y_get_default_facade().astichi_ref(external=method_name)()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=323,
+            line_number=324,
         )
     ),
     "AfterTransactionHookCall": astichi_template(
@@ -7630,7 +7654,7 @@ def astichi_elif():
             except BaseException:
                 pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=332,
+            line_number=333,
         )
     ),
     "CommitOrderKeyFallbackBranch": astichi_template(
@@ -7640,7 +7664,7 @@ def astichi_elif():
     if True:
         return ()""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=349,
+            line_number=350,
         )
     ),
     "RequiresValidationFallbackBranch": astichi_template(
@@ -7650,7 +7674,7 @@ def astichi_elif():
     if True:
         return False""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=355,
+            line_number=356,
         )
     ),
     "ValidateCommitFallbackBranch": astichi_template(
@@ -7660,7 +7684,7 @@ def astichi_elif():
     if True:
         return True""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=361,
+            line_number=362,
         )
     ),
     "PassFallbackBranch": astichi_template(
@@ -7670,7 +7694,7 @@ def astichi_elif():
     if True:
         pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=367,
+            line_number=368,
         )
     ),
     "ClassBundle": astichi_template(
@@ -7996,6 +8020,11 @@ class default_facade_class_decl_name__astichi_arg__(
             )
         ]
 
+    __init__.__annotations__ = astichi_pass(
+        init_annotations_name__astichi_arg__,
+        outer_bind=True,
+    )
+
 
 class current_facade_class_decl_name__astichi_arg__(
     facade_base_current_base_name__astichi_arg__
@@ -8012,7 +8041,7 @@ class working_facade_class_decl_name__astichi_arg__(
     with astichi_hole(working_facade_properties) as astichi_fallback:
         pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=373,
+            line_number=374,
             keep_names=(
                 "DEFAULT_TRANSACTION",
                 "TransactionManager",
@@ -8039,7 +8068,7 @@ return_class_module_ref__astichi_arg__.__module__ = astichi_pass(
 ).__module__
 return return_class_result_ref__astichi_arg__""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_core.yidl",
-            line_number=714,
+            line_number=720,
         )
     ),
     "BuildTransactionFactsBody": from_astichi_code(
@@ -9022,8 +9051,7 @@ for diagnostic in ctx.records(DefaultFactoryDiagnosticsCollection):
         from_astichi_code(
             """\
 def astichi_params(
-    param_name__astichi_arg__: astichi_bind_external(annotation)
-    = _HAS_DEFAULT_FACTORY
+    param_name__astichi_arg__=_HAS_DEFAULT_FACTORY
 ):
     pass""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_default_factories.yidl",
@@ -9045,7 +9073,7 @@ astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = astich
     outer_bind=True,
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_default_factories.yidl",
-            line_number=397,
+            line_number=396,
             keep_names=("_HAS_DEFAULT_FACTORY",),
         )
     ),
@@ -9060,7 +9088,7 @@ astichi_pass(state, outer_bind=True).astichi_ref(external=state_slot)._ = astich
     outer_bind=True,
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_default_factories.yidl",
-            line_number=412,
+            line_number=411,
         )
     ),
     "InitVarDefaultFactoryEvalInit": astichi_template(
@@ -9073,7 +9101,7 @@ if astichi_pass(field_name__astichi_arg__, outer_bind=True) is _HAS_DEFAULT_FACT
         )
     )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_default_factories.yidl",
-            line_number=422,
+            line_number=421,
             keep_names=("_HAS_DEFAULT_FACTORY",),
         )
     ),
@@ -9084,7 +9112,7 @@ field_name__astichi_arg__ = default_factory_name__astichi_arg__(
     **astichi_hole(default_factory_args)
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_default_factories.yidl",
-            line_number=433,
+            line_number=432,
         )
     ),
     "DefaultFactoryStoredArg": astichi_template(
@@ -9097,7 +9125,7 @@ astichi_funcargs(
     ).astichi_ref(external=provider_name)
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_default_factories.yidl",
-            line_number=439,
+            line_number=438,
         )
     ),
     "DefaultFactoryLocalArg": astichi_template(
@@ -9110,7 +9138,7 @@ astichi_funcargs(
     )
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_default_factories.yidl",
-            line_number=448,
+            line_number=447,
         )
     ),
     "DefaultFactoryClsArg": astichi_template(
@@ -9123,7 +9151,7 @@ astichi_funcargs(
     )
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_default_factories.yidl",
-            line_number=457,
+            line_number=456,
         )
     ),
     "DefaultFactorySelfArg": astichi_template(
@@ -9136,14 +9164,14 @@ astichi_funcargs(
     )
 )""",
             file_name="src/yidl_lifecycle/yidl/lifecycle_default_factories.yidl",
-            line_number=466,
+            line_number=465,
         )
     ),
     "DefaultFactoryEmptyArg": astichi_template(
         from_astichi_code(
             "astichi_funcargs()",
             file_name="src/yidl_lifecycle/yidl/lifecycle_default_factories.yidl",
-            line_number=475,
+            line_number=474,
         )
     ),
     "BuildTransientFactsBody": from_astichi_code(
@@ -10161,6 +10189,34 @@ ASSEMBLY_CONTRIBUTIONS = {
             ),
         ),
     ),
+    "InitAnnotationsBuilderParam": ContributionSpec(
+        name="InitAnnotationsBuilderParam",
+        source_name="BuilderParam",
+        source_kind="resource",
+        build_name="InitAnnotationsBuilderParam",
+        index=ValueRef("ClassOrder"),
+        order=ValueRef("ClassOrder"),
+        target=TargetSpec(
+            name="builder_params",
+            paths=(
+                TargetPathSpec(
+                    kind="build",
+                    path=PathSpec(
+                        segments=(
+                            PathSegmentSpec(kind="name", name="Root", indexes=()),
+                        )
+                    ),
+                ),
+            ),
+        ),
+        bindings=(
+            BindingSpec(
+                kind="ident",
+                name="value_name",
+                value=ValueRef("InitAnnotationsParamName"),
+            ),
+        ),
+    ),
     "TxKeysBuilderParam": ContributionSpec(
         name="TxKeysBuilderParam",
         source_name="BuilderParam",
@@ -10522,9 +10578,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "PlainInitParamDefault": ContributionSpec(
@@ -10549,9 +10602,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
             BindingSpec(
                 kind="ident",
                 name="default_value_name",
@@ -10581,9 +10631,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "InitVarParamDefault": ContributionSpec(
@@ -10608,9 +10655,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
             BindingSpec(
                 kind="ident",
                 name="default_value_name",
@@ -11123,9 +11167,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
             BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
-            BindingSpec(
                 kind="ident",
                 name="default_value_name",
                 value=ValueRef("DefaultValueParamName"),
@@ -11154,9 +11195,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "ManagedCurrentInitAssignment": ContributionSpec(
@@ -12481,9 +12519,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "InitVarParamDefaultFactory": ContributionSpec(
@@ -12508,9 +12543,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "ManagedInitParamDefaultFactory": ContributionSpec(
@@ -12535,9 +12567,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "StoredDefaultFactoryEvalInitContribution": ContributionSpec(
@@ -12947,9 +12976,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "TransientInitParamDefault": ContributionSpec(
@@ -12974,9 +13000,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
             BindingSpec(
                 kind="ident",
                 name="default_value_name",
@@ -13006,9 +13029,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "TransientCurrentInitAssignment": ContributionSpec(
@@ -13857,9 +13877,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "BindingInitParamDefault": ContributionSpec(
@@ -13884,9 +13901,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
             BindingSpec(
                 kind="ident",
                 name="default_value_name",
@@ -13916,9 +13930,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "OwnedInitParamRequired": ContributionSpec(
@@ -13943,9 +13954,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "OwnedInitParamDefault": ContributionSpec(
@@ -13970,9 +13978,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
             BindingSpec(
                 kind="ident",
                 name="default_value_name",
@@ -14002,9 +14007,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "BindingInitAssignment": ContributionSpec(
@@ -15110,9 +15112,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "ConstInitParamDefault": ContributionSpec(
@@ -15137,9 +15136,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
             BindingSpec(
                 kind="ident",
                 name="default_value_name",
@@ -15169,9 +15165,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "StaticInitParamOptional": ContributionSpec(
@@ -15196,9 +15189,6 @@ ASSEMBLY_CONTRIBUTIONS = {
         ),
         bindings=(
             BindingSpec(kind="ident", name="param_name", value=ValueRef("FieldName")),
-            BindingSpec(
-                kind="external", name="annotation", value=ValueRef("Annotation")
-            ),
         ),
     ),
     "ConstInitAssignment": ContributionSpec(
@@ -15802,6 +15792,16 @@ ASSEMBLY_MATCHERS = {
             ),
         ),
         default_contribution_name="AnnotationsBuilderParam",
+        rules=(),
+    ),
+    "InitAnnotationsBuilderParamContributions": ContributionMatcherSpec(
+        name="InitAnnotationsBuilderParamContributions",
+        inputs=(
+            AssemblyInputSpec(
+                name="lifecycle_class", collection_name="Classes", collection=None
+            ),
+        ),
+        default_contribution_name="InitAnnotationsBuilderParam",
         rules=(),
     ),
     "TxKeysBuilderParamContributions": ContributionMatcherSpec(
@@ -18610,6 +18610,17 @@ ASSEMBLY_EDGES = {
         condition=None,
         matcher_name="AnnotationsBuilderParamContributions",
     ),
+    "CoreModuleProduction.init_annotations_params": AssemblyEdgeSpec(
+        name="CoreModuleProduction.init_annotations_params",
+        context_inputs=(),
+        from_inputs=(
+            AssemblyInputSpec(
+                name="lifecycle_class", collection_name="Classes", collection=None
+            ),
+        ),
+        condition=None,
+        matcher_name="InitAnnotationsBuilderParamContributions",
+    ),
     "CoreModuleProduction.tx_keys_params": AssemblyEdgeSpec(
         name="CoreModuleProduction.tx_keys_params",
         context_inputs=(),
@@ -20397,6 +20408,21 @@ ASSEMBLY_PRODUCTIONS = {
             ),
             InlineApplySpec(
                 edge=AssemblyEdgeSpec(
+                    name="CoreModuleProduction.init_annotations_params",
+                    context_inputs=(),
+                    from_inputs=(
+                        AssemblyInputSpec(
+                            name="lifecycle_class",
+                            collection_name="Classes",
+                            collection=None,
+                        ),
+                    ),
+                    condition=None,
+                    matcher_name="InitAnnotationsBuilderParamContributions",
+                )
+            ),
+            InlineApplySpec(
+                edge=AssemblyEdgeSpec(
                     name="CoreModuleProduction.tx_keys_params",
                     context_inputs=(),
                     from_inputs=(
@@ -20623,6 +20649,11 @@ ASSEMBLY_PRODUCTIONS = {
                     kind="ident",
                     name="annotations_name",
                     value=ValueRef("AnnotationsParamName"),
+                ),
+                BindingSpec(
+                    kind="ident",
+                    name="init_annotations_name",
+                    value=ValueRef("InitAnnotationsParamName"),
                 ),
                 BindingSpec(
                     kind="external",

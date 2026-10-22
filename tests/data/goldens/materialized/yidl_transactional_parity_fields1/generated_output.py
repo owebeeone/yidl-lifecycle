@@ -5,7 +5,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Config_annotations, _Config_tx_keys, _Config_seed_default, _Config_slot_id_default, _Config_derived_id_default_factory, _Config_lazy_number_default, _Config_items_default_factory, _Config_seeded_static_default_factory, _Config_mutable_number_default, _Config_mutable_items_default_factory, _Config_mutable_no_init_default_factory):
+def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Config_annotations, _Config_init_annotations, _Config_tx_keys, _Config_seed_default, _Config_slot_id_default, _Config_derived_id_default_factory, _Config_lazy_number_default, _Config_items_default_factory, _Config_seeded_static_default_factory, _Config_mutable_number_default, _Config_mutable_items_default_factory, _Config_mutable_no_init_default_factory):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -427,7 +427,7 @@ def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Confi
         __yidl_tx_index_to_key__ = _Config_tx_keys
         __yidl_tx_key_to_index__ = {key: index for index, key in enumerate(_Config_tx_keys)}
 
-        def __init__(self, seed: 'int'=_Config_seed_default, slot_id: 'int'=_Config_slot_id_default, derived_id: 'int'=_HAS_DEFAULT_FACTORY, declared: 'tuple[str, ...]'=_HAS_DEFAULT_FACTORY, lazy_number: 'int'=_HAS_DEFAULT_FACTORY, items: 'list[int]'=_HAS_DEFAULT_FACTORY, seeded_static: 'int'=_HAS_DEFAULT_FACTORY, mutable_unset: 'int'=_HAS_DEFAULT_FACTORY, mutable_number: 'int'=_HAS_DEFAULT_FACTORY, mutable_items: 'list[int]'=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
+        def __init__(self, seed=_Config_seed_default, slot_id=_Config_slot_id_default, derived_id=_HAS_DEFAULT_FACTORY, declared=_HAS_DEFAULT_FACTORY, lazy_number=_HAS_DEFAULT_FACTORY, items=_HAS_DEFAULT_FACTORY, seeded_static=_HAS_DEFAULT_FACTORY, mutable_unset=_HAS_DEFAULT_FACTORY, mutable_number=_HAS_DEFAULT_FACTORY, mutable_items=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
             state = object.__new__(Config_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -478,6 +478,7 @@ def build_lifecycle_class(decorated_cls, *, _Config_lifecycle_definition, _Confi
             if False:
                 _Config_mutable_no_init_default_factory(mutable_number=self.mutable_number)
             state._y_working_tx_ids = [None for _group in _Config_tx_keys]
+        __init__.__annotations__ = _Config_init_annotations
 
     class Config_Current(Config_FacadeBase):
         __slots__ = ()

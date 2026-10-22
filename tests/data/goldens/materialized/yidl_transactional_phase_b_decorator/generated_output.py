@@ -5,7 +5,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _Counter_lifecycle_definition, _Counter_annotations, _Counter_tx_keys, _Counter_plain_default, _Counter_seed_default, _Counter_KIND_default, _Counter_count_default, _Counter_audit_count_default):
+def build_lifecycle_class(decorated_cls, *, _Counter_lifecycle_definition, _Counter_annotations, _Counter_init_annotations, _Counter_tx_keys, _Counter_plain_default, _Counter_seed_default, _Counter_KIND_default, _Counter_count_default, _Counter_audit_count_default):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -403,7 +403,7 @@ def build_lifecycle_class(decorated_cls, *, _Counter_lifecycle_definition, _Coun
             state._y_ensure_working_transaction(1)
             state._y_audit_count_working = next_value
 
-        def __init__(self, plain: 'int'=_Counter_plain_default, seed: 'int'=_Counter_seed_default, count: 'int'=_Counter_count_default, audit_count: 'int'=_Counter_audit_count_default, *, transaction_manager=None):
+        def __init__(self, plain=_Counter_plain_default, seed=_Counter_seed_default, count=_Counter_count_default, audit_count=_Counter_audit_count_default, *, transaction_manager=None):
             state = object.__new__(Counter_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -420,6 +420,7 @@ def build_lifecycle_class(decorated_cls, *, _Counter_lifecycle_definition, _Coun
             state._y_audit_count_working = VOID
             state._y_audit_count_staged = VOID
             state._y_working_tx_ids = [None for _group in _Counter_tx_keys]
+        __init__.__annotations__ = _Counter_init_annotations
 
     class Counter_Current(Counter_FacadeBase):
         __slots__ = ()

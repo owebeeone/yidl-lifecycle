@@ -12,6 +12,7 @@ def build_lifecycle_class(
     *,
     _Config_lifecycle_definition,
     _Config_annotations,
+    _Config_init_annotations,
     _Config_tx_keys,
     _Config_seed_default,
     _Config_slot_id_default,
@@ -526,16 +527,16 @@ def build_lifecycle_class(
 
         def __init__(
             self,
-            seed: "int" = _Config_seed_default,
-            slot_id: "int" = _Config_slot_id_default,
-            derived_id: "int" = _HAS_DEFAULT_FACTORY,
-            declared: "tuple[str, ...]" = _HAS_DEFAULT_FACTORY,
-            lazy_number: "int" = _HAS_DEFAULT_FACTORY,
-            items: "list[int]" = _HAS_DEFAULT_FACTORY,
-            seeded_static: "int" = _HAS_DEFAULT_FACTORY,
-            mutable_unset: "int" = _HAS_DEFAULT_FACTORY,
-            mutable_number: "int" = _HAS_DEFAULT_FACTORY,
-            mutable_items: "list[int]" = _HAS_DEFAULT_FACTORY,
+            seed=_Config_seed_default,
+            slot_id=_Config_slot_id_default,
+            derived_id=_HAS_DEFAULT_FACTORY,
+            declared=_HAS_DEFAULT_FACTORY,
+            lazy_number=_HAS_DEFAULT_FACTORY,
+            items=_HAS_DEFAULT_FACTORY,
+            seeded_static=_HAS_DEFAULT_FACTORY,
+            mutable_unset=_HAS_DEFAULT_FACTORY,
+            mutable_number=_HAS_DEFAULT_FACTORY,
+            mutable_items=_HAS_DEFAULT_FACTORY,
             *,
             transaction_manager=None,
         ):
@@ -599,6 +600,8 @@ def build_lifecycle_class(
                     mutable_number=self.mutable_number
                 )
             state._y_working_tx_ids = [None for _group in _Config_tx_keys]
+
+        __init__.__annotations__ = _Config_init_annotations
 
     class Config_Current(Config_FacadeBase):
         __slots__ = ()

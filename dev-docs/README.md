@@ -16,6 +16,8 @@
   fingerprint boundary, configuration, and verification.
 - [Cache startup measurements](LifecycleCodeCacheStartup.md): fresh-process
   disabled/cold/warm comparison, phase costs, and reproduction.
+- [Constructor annotations](ConstructorAnnotationBinding.md): captured runtime
+  binding, Python 3.14 harvesting, TDD evidence, and separate follow-up findings.
 - [Repository instructions](../AGENTS.md): package ownership and coverage rules.
 
 The library generates lifecycle behavior through its feature YIDL and the

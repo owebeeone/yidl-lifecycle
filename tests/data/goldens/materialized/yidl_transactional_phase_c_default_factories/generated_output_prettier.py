@@ -12,6 +12,7 @@ def build_lifecycle_class(
     *,
     _Example_lifecycle_definition,
     _Example_annotations,
+    _Example_init_annotations,
     _Example_tx_keys,
     _Example_SCALE_default,
     _Example_owner_default,
@@ -515,11 +516,11 @@ def build_lifecycle_class(
 
         def __init__(
             self,
-            v1: "int",
-            owner: "str" = _Example_owner_default,
-            owner_tag: "str" = _HAS_DEFAULT_FACTORY,
-            v2: "int" = _HAS_DEFAULT_FACTORY,
-            v3: "int" = _HAS_DEFAULT_FACTORY,
+            v1,
+            owner=_Example_owner_default,
+            owner_tag=_HAS_DEFAULT_FACTORY,
+            v2=_HAS_DEFAULT_FACTORY,
+            v3=_HAS_DEFAULT_FACTORY,
             *,
             transaction_manager=None,
         ):
@@ -574,6 +575,8 @@ def build_lifecycle_class(
                 owner_tag = _Example_owner_tag_default_factory(self=self)
             state._y_owner_tag_value = owner_tag
             state._y_working_tx_ids = [None for _group in _Example_tx_keys]
+
+        __init__.__annotations__ = _Example_init_annotations
 
     class Example_Current(Example_FacadeBase):
         __slots__ = ()

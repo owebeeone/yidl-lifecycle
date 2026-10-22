@@ -5,7 +5,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _Scratch_lifecycle_definition, _Scratch_annotations, _Scratch_tx_keys, _Scratch_cache_default_factory, _Scratch_marker_default, _Scratch_count_default):
+def build_lifecycle_class(decorated_cls, *, _Scratch_lifecycle_definition, _Scratch_annotations, _Scratch_init_annotations, _Scratch_tx_keys, _Scratch_cache_default_factory, _Scratch_marker_default, _Scratch_count_default):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -331,7 +331,7 @@ def build_lifecycle_class(decorated_cls, *, _Scratch_lifecycle_definition, _Scra
             state._y_ensure_working_transaction(0)
             state._y_count_working = next_value
 
-        def __init__(self, count: 'int'=_Scratch_count_default, *, transaction_manager=None):
+        def __init__(self, count=_Scratch_count_default, *, transaction_manager=None):
             state = object.__new__(Scratch_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -347,6 +347,7 @@ def build_lifecycle_class(decorated_cls, *, _Scratch_lifecycle_definition, _Scra
             cache = _Scratch_cache_default_factory(count=self.count)
             state._y_cache_value = cache
             state._y_working_tx_ids = [None for _group in _Scratch_tx_keys]
+        __init__.__annotations__ = _Scratch_init_annotations
 
     class Scratch_Current(Scratch_FacadeBase):
         __slots__ = ()

@@ -12,6 +12,7 @@ def build_lifecycle_class(
     *,
     _Owner_lifecycle_definition,
     _Owner_annotations,
+    _Owner_init_annotations,
     _Owner_tx_keys,
     _Owner_value_state_default_factory,
     _Owner_identity_state_default_factory,
@@ -550,13 +551,13 @@ def build_lifecycle_class(
 
         def __init__(
             self,
-            value_state: "list[int]" = _HAS_DEFAULT_FACTORY,
-            identity_state: "list[int]" = _HAS_DEFAULT_FACTORY,
-            child: "BindingBase | None" = _Owner_child_default,
-            identity_child: "BindingBase | None" = _Owner_identity_child_default,
-            children: "dict[str, BindingBase]" = _HAS_DEFAULT_FACTORY,
-            handle: "BindingBase | None" = _Owner_handle_default,
-            handles: "dict[str, BindingBase]" = _HAS_DEFAULT_FACTORY,
+            value_state=_HAS_DEFAULT_FACTORY,
+            identity_state=_HAS_DEFAULT_FACTORY,
+            child=_Owner_child_default,
+            identity_child=_Owner_identity_child_default,
+            children=_HAS_DEFAULT_FACTORY,
+            handle=_Owner_handle_default,
+            handles=_HAS_DEFAULT_FACTORY,
             *,
             transaction_manager=None,
         ):
@@ -602,6 +603,8 @@ def build_lifecycle_class(
                 handles = _Owner_handles_default_factory()
             self.handles = handles
             state._y_working_tx_ids = [None for _group in _Owner_tx_keys]
+
+        __init__.__annotations__ = _Owner_init_annotations
 
     class Owner_Current(Owner_FacadeBase):
         __slots__ = ()

@@ -51,19 +51,21 @@ def build_kwargs_source(size: int) -> str:
         "    pass",
         "",
         f"def _make_{class_name}_kwargs():",
-        "    return {",
-        f"        '_{class_name}_lifecycle_definition': {{}},",
-        f"        '_{class_name}_annotations': {{",
+        "    annotations = {",
     ]
     for index in range(size):
-        lines.append(f"            'plain_{index}': 'int',")
+        lines.append(f"        'plain_{index}': 'int',")
     for index in range(size):
-        lines.append(f"            'count_{index}': 'int',")
+        lines.append(f"        'count_{index}': 'int',")
     for index in range(size):
-        lines.append(f"            'derived_{index}': 'int',")
+        lines.append(f"        'derived_{index}': 'int',")
     lines.extend(
         [
-            "        },",
+            "    }",
+            "    return {",
+            f"        '_{class_name}_lifecycle_definition': {{}},",
+            f"        '_{class_name}_annotations': annotations,",
+            f"        '_{class_name}_init_annotations': dict(annotations),",
             f"        '_{class_name}_tx_keys': (DEFAULT_TRANSACTION,),",
         ]
     )

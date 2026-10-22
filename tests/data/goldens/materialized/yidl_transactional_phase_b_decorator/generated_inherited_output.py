@@ -5,7 +5,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _B_lifecycle_definition, _B_annotations, _B_tx_keys, _B_plain_default, _B_seed_default, _B_KIND_default, _B_v1_default, _B_v2_default):
+def build_lifecycle_class(decorated_cls, *, _B_lifecycle_definition, _B_annotations, _B_init_annotations, _B_tx_keys, _B_plain_default, _B_seed_default, _B_KIND_default, _B_v1_default, _B_v2_default):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -374,7 +374,7 @@ def build_lifecycle_class(decorated_cls, *, _B_lifecycle_definition, _B_annotati
             state._y_ensure_working_transaction(0)
             state._y_v2_working = next_value
 
-        def __init__(self, plain: 'int'=_B_plain_default, seed: 'int'=_B_seed_default, v1: 'int'=_B_v1_default, v2: 'int'=_B_v2_default, *, transaction_manager=None):
+        def __init__(self, plain=_B_plain_default, seed=_B_seed_default, v1=_B_v1_default, v2=_B_v2_default, *, transaction_manager=None):
             state = object.__new__(B_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -393,6 +393,7 @@ def build_lifecycle_class(decorated_cls, *, _B_lifecycle_definition, _B_annotati
             state._y_v2_working = VOID
             state._y_v2_staged = VOID
             state._y_working_tx_ids = [None for _group in _B_tx_keys]
+        __init__.__annotations__ = _B_init_annotations
 
     class B_Current(B_FacadeBase):
         __slots__ = ()

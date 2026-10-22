@@ -5,7 +5,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _Derived_lifecycle_definition, _Derived_annotations, _Derived_tx_keys, _Derived_v1_default, _Derived_v2_default_factory):
+def build_lifecycle_class(decorated_cls, *, _Derived_lifecycle_definition, _Derived_annotations, _Derived_init_annotations, _Derived_tx_keys, _Derived_v1_default, _Derived_v2_default_factory):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -344,7 +344,7 @@ def build_lifecycle_class(decorated_cls, *, _Derived_lifecycle_definition, _Deri
             state._y_ensure_working_transaction(0)
             state._y_v2_working = next_value
 
-        def __init__(self, v1: 'int'=_Derived_v1_default, v2: 'int'=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
+        def __init__(self, v1=_Derived_v1_default, v2=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
             state = object.__new__(Derived_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -362,6 +362,7 @@ def build_lifecycle_class(decorated_cls, *, _Derived_lifecycle_definition, _Deri
                 v2 = _Derived_v2_default_factory(v1=self.v1)
             state._y_v2_current = v2
             state._y_working_tx_ids = [None for _group in _Derived_tx_keys]
+        __init__.__annotations__ = _Derived_init_annotations
 
     class Derived_Current(Derived_FacadeBase):
         __slots__ = ()

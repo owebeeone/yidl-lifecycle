@@ -45,7 +45,8 @@ def harvest_lifecycle_definition(cls: type[object]) -> HarvestedLifecycle:
     """Harvest Phase A-compatible lifecycle facts from ``cls``."""
 
     _reject_reserved_class_body_names(cls)
-    annotations = dict(cls.__dict__.get("__annotations__", {}))
+    # Class attribute access handles deferred annotations and stays local-only.
+    annotations = dict(getattr(cls, "__annotations__", {}))
     class_fact = _class_fact(cls)
     _reject_generated_name_collisions(cls, annotations, class_fact)
     class_id = str(class_fact["class_id"])
@@ -115,6 +116,11 @@ def harvest_lifecycle_definition(cls: type[object]) -> HarvestedLifecycle:
             key=lambda fact: int(fact["field_order"]),
         ),
     )
+    build_kwargs[str(class_fact["init_annotations_param_name"])] = {
+        str(fact["field_name"]): fact["annotation"]
+        for fact in field_facts
+        if fact["init"] and fact["field_kind"] not in {"classvar", "local_store"}
+    }
     class_fact["lifecycle_field_names"] = tuple(
         str(fact["field_name"])
         for fact in field_facts
@@ -202,6 +208,7 @@ def _class_fact(cls: type[object]) -> dict[str, object]:
         "working_facade_class_name": f"{class_name}_Working",
         "lifecycle_definition_param_name": f"_{class_name}_lifecycle_definition",
         "annotations_param_name": f"_{class_name}_annotations",
+        "init_annotations_param_name": f"_{class_name}_init_annotations",
         "tx_keys_param_name": f"_{class_name}_tx_keys",
         "lifecycle_field_names": (),
     }

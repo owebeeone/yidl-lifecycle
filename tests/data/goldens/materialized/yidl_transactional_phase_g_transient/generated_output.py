@@ -5,7 +5,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _Scratch_lifecycle_definition, _Scratch_annotations, _Scratch_tx_keys, _Scratch_seed_default, _Scratch_label_default, _Scratch_marker_default, _Scratch_items_default_factory, _Scratch_buffer_default, _Scratch_buffer_working_default_factory, _Scratch_audit_buffer_default, _Scratch_audit_buffer_working_default_factory):
+def build_lifecycle_class(decorated_cls, *, _Scratch_lifecycle_definition, _Scratch_annotations, _Scratch_init_annotations, _Scratch_tx_keys, _Scratch_seed_default, _Scratch_label_default, _Scratch_marker_default, _Scratch_items_default_factory, _Scratch_buffer_default, _Scratch_buffer_working_default_factory, _Scratch_audit_buffer_default, _Scratch_audit_buffer_working_default_factory):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -438,7 +438,7 @@ def build_lifecycle_class(decorated_cls, *, _Scratch_lifecycle_definition, _Scra
             state._y_ensure_working_transaction(1)
             state._y_audit_buffer_working = value
 
-        def __init__(self, seed: 'int'=_Scratch_seed_default, label: 'str'=_Scratch_label_default, marker: 'str'=_Scratch_marker_default, items: 'list[int]'=_HAS_DEFAULT_FACTORY, buffer: 'list[int] | None'=_Scratch_buffer_default, audit_buffer: 'list[int] | None'=_Scratch_audit_buffer_default, *, transaction_manager=None):
+        def __init__(self, seed=_Scratch_seed_default, label=_Scratch_label_default, marker=_Scratch_marker_default, items=_HAS_DEFAULT_FACTORY, buffer=_Scratch_buffer_default, audit_buffer=_Scratch_audit_buffer_default, *, transaction_manager=None):
             state = object.__new__(Scratch_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -461,6 +461,7 @@ def build_lifecycle_class(decorated_cls, *, _Scratch_lifecycle_definition, _Scra
             state._y_items_current = items
             state._y_seed_initvar = seed
             state._y_working_tx_ids = [None for _group in _Scratch_tx_keys]
+        __init__.__annotations__ = _Scratch_init_annotations
 
     class Scratch_Current(Scratch_FacadeBase):
         __slots__ = ()

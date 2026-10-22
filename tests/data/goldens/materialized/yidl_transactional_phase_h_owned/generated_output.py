@@ -5,7 +5,7 @@ from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
 from yidl_lifecycle.transaction_yidl import TransactionManager
 VOID = object()
 
-def build_lifecycle_class(decorated_cls, *, _Owner_lifecycle_definition, _Owner_annotations, _Owner_tx_keys, _Owner_value_state_default_factory, _Owner_identity_state_default_factory, _Owner_child_default, _Owner_identity_child_default, _Owner_children_default_factory, _Owner_handle_default, _Owner_handles_default_factory):
+def build_lifecycle_class(decorated_cls, *, _Owner_lifecycle_definition, _Owner_annotations, _Owner_init_annotations, _Owner_tx_keys, _Owner_value_state_default_factory, _Owner_identity_state_default_factory, _Owner_child_default, _Owner_identity_child_default, _Owner_children_default_factory, _Owner_handle_default, _Owner_handles_default_factory):
     from collections.abc import Mapping
     from yidl_lifecycle.bindings import BindingBase, BindingDict
 
@@ -457,7 +457,7 @@ def build_lifecycle_class(decorated_cls, *, _Owner_lifecycle_definition, _Owner_
             state._y_ensure_working_transaction(0)
             state._y_children_working = next_value
 
-        def __init__(self, value_state: 'list[int]'=_HAS_DEFAULT_FACTORY, identity_state: 'list[int]'=_HAS_DEFAULT_FACTORY, child: 'BindingBase | None'=_Owner_child_default, identity_child: 'BindingBase | None'=_Owner_identity_child_default, children: 'dict[str, BindingBase]'=_HAS_DEFAULT_FACTORY, handle: 'BindingBase | None'=_Owner_handle_default, handles: 'dict[str, BindingBase]'=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
+        def __init__(self, value_state=_HAS_DEFAULT_FACTORY, identity_state=_HAS_DEFAULT_FACTORY, child=_Owner_child_default, identity_child=_Owner_identity_child_default, children=_HAS_DEFAULT_FACTORY, handle=_Owner_handle_default, handles=_HAS_DEFAULT_FACTORY, *, transaction_manager=None):
             state = object.__new__(Owner_State)
             object.__setattr__(self, '_y_state', state)
             object.__setattr__(self, '_y_current_facade', None)
@@ -496,6 +496,7 @@ def build_lifecycle_class(decorated_cls, *, _Owner_lifecycle_definition, _Owner_
                 handles = _Owner_handles_default_factory()
             self.handles = handles
             state._y_working_tx_ids = [None for _group in _Owner_tx_keys]
+        __init__.__annotations__ = _Owner_init_annotations
 
     class Owner_Current(Owner_FacadeBase):
         __slots__ = ()
