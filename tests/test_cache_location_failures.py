@@ -114,8 +114,8 @@ def test_unusable_origin_does_not_prevent_decorating(tmp_path, issue):
 
 
 @pytest.mark.skipif(
-    sys.platform not in {"darwin", "linux"},
-    reason="persistent trust requires macOS/Linux",
+    sys.platform not in {"darwin", "linux", "win32"},
+    reason="unsupported storage trust platform",
 )
 def test_fresh_explicit_adapter_clears_prior_artifacts_before_lookup(tmp_path):
     adapter = importlib.import_module("yidl_lifecycle.lifecycle_code_cache")

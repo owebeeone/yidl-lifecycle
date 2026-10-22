@@ -110,15 +110,17 @@ def test_live_annotation_is_not_encoded_using_repr():
 
 
 @pytest.mark.skipif(
-    sys.platform not in {"darwin", "linux"},
-    reason="persistent trust checks require macOS/Linux",
+    sys.platform not in {"darwin", "linux", "win32"},
+    reason="unsupported storage trust platform",
 )
 @pytest.mark.parametrize("placement", ["override", "local", "home"])
 def test_canonical_lifecycle_fixture_reuses_code_in_fresh_processes(
     tmp_path, placement
 ):
     fixture = Path(__file__).parent / "data" / "cache" / "lifecycle_process.py"
-    environment = dict(os.environ, HOME=str(tmp_path / "home"))
+    environment = dict(
+        os.environ, HOME=str(tmp_path / "home"), USERPROFILE=str(tmp_path / "home")
+    )
     environment.pop("YIDL_LIFECYCLE_CACHE", None)
     environment.pop("YIDL_LIFECYCLE_CACHE_DIR", None)
     source = tmp_path / "source"
@@ -165,6 +167,10 @@ def test_canonical_lifecycle_fixture_reuses_code_in_fresh_processes(
             else tmp_path / "home" / ".yidl" / "cache"
         )
     )
+    if sys.platform == "win32":
+        # The mirrored home layout can exceed Win32's legacy MAX_PATH. Cache
+        # operations use relative handles; inspect those artifacts explicitly.
+        directory = Path("\\\\?\\" + str(directory))
     assert len(list(directory.rglob("*.ycode"))) == 2
 
 
@@ -215,8 +221,8 @@ def test_unknown_annotation_bypasses_without_inspecting_user_objects(tmp_path):
 
 @pytest.mark.parametrize("step", ["AST execution", "class build"])
 @pytest.mark.skipif(
-    sys.platform not in {"darwin", "linux"},
-    reason="persistent trust checks require macOS/Linux",
+    sys.platform not in {"darwin", "linux", "win32"},
+    reason="unsupported storage trust platform",
 )
 def test_cached_execution_and_binding_failures_keep_class_context(
     tmp_path, monkeypatch, step
@@ -273,8 +279,8 @@ def test_invalid_factory_dependencies_still_fail_with_caching(tmp_path, monkeypa
 
 
 @pytest.mark.skipif(
-    sys.platform not in {"darwin", "linux"},
-    reason="persistent trust checks require macOS/Linux",
+    sys.platform not in {"darwin", "linux", "win32"},
+    reason="unsupported storage trust platform",
 )
 def test_relative_cache_directory_is_fixed_before_working_directory_changes(
     tmp_path, monkeypatch

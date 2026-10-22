@@ -159,8 +159,12 @@ YIDL_LIFECYCLE_CACHE=off uv run python your_app.py
 An automatic cache still requires the relevant routes to be tracked in that
 process; this command does not discover or clear untracked module/home caches.
 Set `YIDL_LIFECYCLE_CACHE=off` and restart to disable. Shared
-cache trust currently supports macOS/Linux inspection, with safe bypass on
-unsupported platforms. Cross-platform release approval remains separate.
+cache trust supports macOS/Linux inspection and Windows fixed-local-NTFS
+ownership/ACL and handle checks. Windows ReFS and other unsupported storage
+routes bypass; a source on ReFS can still use the automatic NTFS home fallback.
+See the [Windows policy and verification amendment](../../yidl-cache/dev-docs/WindowsPersistence.md)
+for exact guarantees and qualification limits. Cross-platform release approval
+remains separate.
 
 ## Verification
 
