@@ -2,9 +2,10 @@
 
 Lifecycle decorator and transactional lifecycle runtime built on YIDL.
 
-This repository is being split out of `yidl` so lifecycle can act as a real
-downstream compiler package while `yidl` stays focused on the generic compiler
-substrate.
+This standalone package owns the decorator and transaction behavior; YIDL owns
+the generic compiler. The initial 0.1.0 alpha pins Astichi 1.1.3, YIDL 0.1.0 and
+Cache 0.1.0. See [release preparation](RELEASE.md) for the publication order and
+verification boundary. Licensed under LGPL-2.1-only.
 
 ## Lazy Fields
 

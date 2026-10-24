@@ -1,5 +1,10 @@
 # Developer Documentation
 
+See [release process](../RELEASE.md) and [publishing preparation](Publishing.md)
+for current packaging, licensing, verified candidate checks and the ordered
+publication gates. Older checkpoint statuses retain their original revisions.
+
+
 ## Current Surface
 
 - [Package README](../README.md): executable marker surface, including `lazy`
