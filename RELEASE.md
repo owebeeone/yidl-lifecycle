@@ -9,6 +9,36 @@ The initial dependency tuple is Astichi 1.1.3, YIDL 0.1.0 and Cache 0.1.0. Regis
 The operator selected **LGPL-2.1-only** for this package. `LICENSE` contains the
 license text and both distribution types carry the license and README metadata.
 
+## YIDL compatibility contract
+
+Lifecycle hard-depends on the exact published YIDL version that produced its
+committed generated base and passed the release checks. Keep that dependency
+as an exact equality pin, not a minimum or open-ended range. The generated base
+is shipped in both distribution formats; installing or upgrading YIDL does not
+automatically regenerate it.
+
+For a YIDL dependency update:
+
+1. Choose an explicit published YIDL release and update Lifecycle's exact pin.
+2. Create a clean environment that installs that release using registry metadata,
+   without sibling source overrides. Verify the installed version matches the
+   selected pin; do not select the pin from an ambient installation.
+3. Regenerate the committed base with that environment's YIDL, review generated
+   changes and run the full release checks, including generated-base freshness,
+   canonical outputs and installed-artifact checks.
+4. Publish the compatible Lifecycle release only after its own release approval.
+
+The existing regeneration tests check that committed output matches the
+installed compiler. They do not choose a dependency version or rewrite generated
+files automatically. A failing check requires explicit reviewed regeneration.
+
+YIDL also supplies the runtime data model, assembly plans/engine, template
+adapters and sentinel support used by Lifecycle. Regeneration alone does not
+establish compatibility with changed runtime APIs or language semantics.
+Astichi remains part of the template/composition execution path. The current
+release pins it in both YIDL and Lifecycle; widening that range is a separate
+qualification decision, not implied by the YIDL pinning policy.
+
 ## Publication order and gates
 
 1. Prepare and publish **yidl-cache 0.1.0**.

@@ -7,6 +7,31 @@ the generic compiler. The initial 0.1.0 alpha pins Astichi 1.1.3, YIDL 0.1.0 and
 Cache 0.1.0. See [release preparation](RELEASE.md) for the publication order and
 verification boundary. Licensed under LGPL-2.1-only.
 
+## Generated Builders And Runtime Dependencies
+
+Lifecycle ships a committed generated base in its wheel and source distribution;
+installation does not regenerate it. The public `lifecycle` decorator is a
+handwritten entry point that uses this base to build each decorated class.
+
+YIDL is a runtime dependency as well as the compiler used for regeneration.
+The generated base imports YIDL's record/container primitives, assembly-plan
+objects, assembly execution engine, and Astichi template adapters. Lifecycle's
+field markers also use YIDL's sentinel helper. A normal generation-free cache
+hit avoids assembly and compilation, but does not make Lifecycle independent
+of YIDL.
+
+**Lifecycle must pin the exact published YIDL version used to regenerate and
+qualify its shipped builders.** It must not declare an open-ended minimum YIDL
+version or derive the pin from an arbitrary developer environment. Supporting
+a different YIDL release requires regeneration, compatibility checks, and a
+Lifecycle release with the corresponding exact dependency pin. See the
+[release process](RELEASE.md#yidl-compatibility-contract).
+
+Astichi supplies the template/composition runtime used through YIDL. Its
+compatibility also needs qualification; it is not automatically interchangeable.
+The current release pins Astichi too. A wider Astichi range would need separate
+validation and consistent dependency declarations in both YIDL and Lifecycle.
+
 ## Lazy Fields
 
 `lazy` declares per-instance, non-transactional, write-once storage. An explicit
