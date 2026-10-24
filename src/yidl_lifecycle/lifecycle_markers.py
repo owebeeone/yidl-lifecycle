@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
-from yidl.sentinel_maker import sentinels
+from compat_sentinel import sentinel
 
-MISSING = sentinels.MISSING
-_HAS_DEFAULT_FACTORY = sentinels.HAS_DEFAULT_FACTORY
+from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
+
+MISSING = sentinel("MISSING")
+_HAS_DEFAULT_FACTORY = sentinel("_HAS_DEFAULT_FACTORY", repr="HAS_DEFAULT_FACTORY")
 _TRANSACTION_METHOD_MARKERS_ATTR = "__yidl_lifecycle_transaction_method_markers__"
 
 

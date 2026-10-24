@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import copy
+import pickle
+
+from compat_sentinel import sentinel
 import pytest
 
 from yidl_lifecycle.lifecycle import LifecycleDefinitionError
@@ -17,6 +21,19 @@ from yidl_lifecycle.lifecycle import normalize_marker
 from yidl_lifecycle.lifecycle import static
 from yidl_lifecycle.lifecycle import transient
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION
+
+
+@pytest.mark.parametrize("value", [MISSING, _HAS_DEFAULT_FACTORY])
+def test_marker_sentinels_use_compat_sentinel_and_preserve_identity(
+    value: object,
+) -> None:
+    from yidl_lifecycle import lifecycle_markers
+
+    assert isinstance(value, sentinel)
+    assert value.__module__ == lifecycle_markers.__name__
+    assert copy.copy(value) is value
+    assert copy.deepcopy(value) is value
+    assert pickle.loads(pickle.dumps(value)) is value
 
 
 def test_field_marker_preserves_default_none() -> None:
@@ -206,7 +223,9 @@ def test_harvester_emits_owned_and_binding_field_facts() -> None:
         handle: object = binding(default=None)
 
     harvested = harvest_lifecycle_definition(Example)
-    child = next(fact for fact in harvested.field_facts if fact["field_name"] == "child")
+    child = next(
+        fact for fact in harvested.field_facts if fact["field_name"] == "child"
+    )
     handle = next(
         fact for fact in harvested.field_facts if fact["field_name"] == "handle"
     )

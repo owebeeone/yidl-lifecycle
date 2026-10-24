@@ -4,7 +4,9 @@
 
 Lifecycle supplies the decorator and transaction runtime, including constructor annotation preservation and compiled-code caching.
 
-The initial dependency tuple is Astichi 1.1.3, YIDL 0.1.0 and Cache 0.1.0. Registry-only checks require YIDL and Cache to be published first.
+The initial dependency tuple is Astichi 1.1.3, YIDL 0.1.0, Cache 0.1.0 and
+compat-sentinel 0.1.2. Registry-only checks require YIDL and Cache to be published
+first. The sentinel dependency is already published.
 
 The operator selected **LGPL-2.1-only** for this package. `LICENSE` contains the
 license text and both distribution types carry the license and README metadata.
@@ -32,9 +34,11 @@ The existing regeneration tests check that committed output matches the
 installed compiler. They do not choose a dependency version or rewrite generated
 files automatically. A failing check requires explicit reviewed regeneration.
 
-YIDL also supplies the runtime data model, assembly plans/engine, template
-adapters and sentinel support used by Lifecycle. Regeneration alone does not
-establish compatibility with changed runtime APIs or language semantics.
+YIDL also supplies the runtime data model, assembly plans/engine and template
+adapters used by Lifecycle. Lifecycle owns its marker sentinel instances,
+created through published compat-sentinel 0.1.2; it does not import YIDL's
+sentinel helper. Regeneration alone does not establish compatibility with
+changed runtime APIs or language semantics.
 Astichi remains part of the template/composition execution path. The current
 release pins it in both YIDL and Lifecycle; widening that range is a separate
 qualification decision, not implied by the YIDL pinning policy.

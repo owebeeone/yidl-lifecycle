@@ -30,7 +30,7 @@ Local development resolves the sibling package through this repository's
 yidl-cache = { path = "../yidl-cache", editable = true }
 ```
 
-Distribution metadata requires `yidl-cache>=0.1.0`. Checkout paths do not leak
+The initial release metadata pins `yidl-cache==0.1.0`. Checkout paths do not leak
 into wheel requirements. Reinstall editable registrations after copying an
 environment; relative source declarations alone do not relocate copied launchers
 or editable-install registrations.

@@ -10,7 +10,7 @@ readme = "README.md"
 license = "LGPL-2.1-only"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
-dependencies = ["astichi==1.1.3", "yidl==0.1.0", "yidl-cache==0.1.0"]
+dependencies = ["astichi==1.1.3", "yidl==0.1.0", "yidl-cache==0.1.0", "compat-sentinel==0.1.2"]
 authors = [{ name = "YIDL contributors" }]
 keywords = ["dsl", "compiler", "decorator", "lifecycle", "transactions"]
 classifiers = [
@@ -28,6 +28,7 @@ yidl-lifecycle-regenerate-base = "yidl_lifecycle.regenerate_lifecycle_base:main"
 [project.urls]
 Source = "https://github.com/owebeeone/yidl-lifecycle"
 Issues = "https://github.com/owebeeone/yidl-lifecycle/issues"
+Documentation = "https://github.com/owebeeone/yidl-lifecycle/blob/main/docs/GettingStarted.md"
 
 [project.optional-dependencies]
 dev = ["black==26.3.1", "pytest>=7.0"]
@@ -44,7 +45,7 @@ yidl-cache = { path = "../yidl-cache", editable = true }
 sources = ["src"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/yidl_lifecycle", "tests", "dev-docs", "RELEASE.md", "gearu.toml", ".release.env"]
+include = ["src/yidl_lifecycle", "tests", "docs", "dev-docs", "RELEASE.md", "gearu.toml", ".release.env"]
 
 [tool.pytest.ini_options]
 pythonpath = [".", "src"]

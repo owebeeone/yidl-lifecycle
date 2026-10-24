@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.12"
 
 [options]
-exclude-newer = "2026-10-17T17:56:01.06303Z"
+exclude-newer = "2026-10-17T18:33:30.337922Z"
 exclude-newer-span = "P1W"
 
 [[package]]
@@ -69,6 +69,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44", size = 27697, upload-time = "2022-10-25T02:36:22.414Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6", size = 25335, upload-time = "2022-10-25T02:36:20.889Z" },
+]
+
+[[package]]
+name = "compat-sentinel"
+version = "0.1.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/87/f9/96c20d278fd6be0073f3362fcf8bf6426e449c2ea6299806c3fbeb33a4e9/compat_sentinel-0.1.2.tar.gz", hash = "sha256:7ff8db6e6f9aaef286de6801dfeb62e8291770f19a3491d2bb8c95d3e62cf32f", size = 14054, upload-time = "2026-10-08T05:58:22.33Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1a/87/8a9c9007cf06726823551b1dad31ebba8e47c26934bb372696c9705de288/compat_sentinel-0.1.2-py3-none-any.whl", hash = "sha256:c211bb0b34b0ac808118196b49cec3cc1e7b4c1ad8a414ac11d7aafba963aa2a", size = 7202, upload-time = "2026-10-08T05:58:21.255Z" },
 ]
 
 [[package]]
@@ -224,6 +233,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "astichi" },
+    { name = "compat-sentinel" },
     { name = "yidl" },
     { name = "yidl-cache" },
 ]
@@ -238,6 +248,7 @@ dev = [
 requires-dist = [
     { name = "astichi", editable = "../astichi" },
     { name = "black", marker = "extra == 'dev'", specifier = "==26.3.1" },
+    { name = "compat-sentinel", specifier = "==0.1.2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "yidl", editable = "../yidl" },
     { name = "yidl-cache", editable = "../yidl-cache" },

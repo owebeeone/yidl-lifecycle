@@ -4,8 +4,16 @@ Lifecycle decorator and transactional lifecycle runtime built on YIDL.
 
 This standalone package owns the decorator and transaction behavior; YIDL owns
 the generic compiler. The initial 0.1.0 alpha pins Astichi 1.1.3, YIDL 0.1.0 and
-Cache 0.1.0. See [release preparation](RELEASE.md) for the publication order and
-verification boundary. Licensed under LGPL-2.1-only.
+Cache 0.1.0, plus compat-sentinel 0.1.2. See [release preparation](RELEASE.md) for
+the publication order and verification boundary. Licensed under LGPL-2.1-only.
+
+## Start here
+
+Read [installation and your first transaction](docs/GettingStarted.md), then use
+[fields and hooks](docs/Markers.md), [transactions and views](docs/ManagedContextApiDraft.md)
+and [cache troubleshooting](docs/Cache.md) for the task at hand. The initial
+release is being prepared; the guide distinguishes candidate-wheel installation
+from installation after PyPI publication.
 
 ## Generated Builders And Runtime Dependencies
 
@@ -16,9 +24,9 @@ handwritten entry point that uses this base to build each decorated class.
 YIDL is a runtime dependency as well as the compiler used for regeneration.
 The generated base imports YIDL's record/container primitives, assembly-plan
 objects, assembly execution engine, and Astichi template adapters. Lifecycle's
-field markers also use YIDL's sentinel helper. A normal generation-free cache
-hit avoids assembly and compilation, but does not make Lifecycle independent
-of YIDL.
+field markers use its own module-owned sentinels from the published
+`compat-sentinel` package. A normal generation-free cache hit avoids assembly
+and compilation, but does not make Lifecycle independent of YIDL.
 
 **Lifecycle must pin the exact published YIDL version used to regenerate and
 qualify its shipped builders.** It must not declare an open-ended minimum YIDL
@@ -87,8 +95,9 @@ Local development uses the relative sibling source `../yidl-cache`, configured
 in `tool.uv.sources`. Published package metadata uses the named distribution
 dependency, not a checkout path.
 
-See [cache integration](dev-docs/LifecycleCodeCache.md) for supported fingerprints,
-invalidation caveats, diagnostics, clearing, and the fresh-process proof.
+See [cache controls and troubleshooting](docs/Cache.md) for normal use. The
+[integration record](dev-docs/LifecycleCodeCache.md) contains detailed fingerprints
+and the fresh-process proof.
 
 ## Development
 

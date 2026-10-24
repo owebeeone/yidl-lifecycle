@@ -18,8 +18,8 @@ requirement. Astichi's separate `pypi` environment remains unchanged.
 ## Preparation and artifact flow
 
 Metadata declares the exact tested first-release closure: Astichi 1.1.3,
-YIDL 0.1.0 and Cache 0.1.0. Both artifacts carry the README and SPDX
-`LGPL-2.1-only` license metadata/text. Source and issue URLs are declared.
+YIDL 0.1.0, Cache 0.1.0 and compat-sentinel 0.1.2. Both artifacts carry the README
+and SPDX `LGPL-2.1-only` license metadata/text. Source and issue URLs are declared.
 
 `gearu.toml`, `.release.env` and `RELEASE.md` configure preparation, source tests
 on Python 3.12–3.14, wheel-from-sdist build and strict Twine validation. Checks
@@ -83,3 +83,44 @@ Confirm each publication and fresh registry-only install before running
 Lifecycle's build-only hosted check and authorized release. Local candidate
 integration does not substitute for that registry-only gate or qualify native
 backends/new platforms. See `RELEASE.md` for GEARU operations and support limits.
+
+## Sentinel dependency follow-up
+
+The operator separately requested replacing Lifecycle's use of YIDL's sentinel
+helper with the published compat-sentinel 0.1.2 release. This follow-up changes
+Lifecycle marker construction, its declared dependency/lock and focused
+identity tests, plus this documentation. YIDL, Astichi, Cache and compat-sentinel
+implementation remain reference-only. The prior evidence above describes the
+pre-migration candidate; verification of the sentinel migration is separate.
+
+Lifecycle owns `MISSING` and `_HAS_DEFAULT_FACTORY` as module-level sentinel
+instances. The factory marker is registered under its actual private global
+name for pickle lookup and retains `HAS_DEFAULT_FACTORY` as its displayed name.
+Copying and pickling preserve identity, and existing public re-exports still
+refer to those same instances. These are Lifecycle markers, not aliases of
+YIDL's helper registry.
+
+The sentinel migration passes the full Lifecycle suite on CPython 3.12.12,
+3.13.12 and 3.14.3 with the explicit Python backend: 464 passed and 46 existing
+skips on each. Fresh wheel and sdist installations obtain compat-sentinel from
+PyPI; marker identity survives copying and pickling, including restoration in
+a fresh process. Strict Twine validation passes both artifacts.
+
+Before Pyrolyze's own separately authorized sentinel migration, its Lifecycle
+integration and legacy lifecycle/freezable checks passed 434 tests on CPython
+3.12.12 against this Lifecycle candidate and published Astichi. Pyrolyze source
+was pinned to `092d055294df97666bee473126708c2868379c2d` for that consumer check.
+The subsequent Pyrolyze migration has its own regression checks; this result
+does not certify those later source edits.
+
+## User-documentation follow-up
+
+The operator authorized installation and first-transaction guidance, a field/hook
+reference, public cache troubleshooting and separation of proposed APIs. These
+pages are linked from the README and included with public docs/images in the
+sdist. The existing transaction-guide filename remains stable for incoming
+links; its heading and completion-failure explanation describe the current API.
+The tutorial and existing transaction/custom-key/aggregate examples execute
+against the installed candidate. Local links and headings are checked. A human
+reading-path self-review follows install, first result and goal-specific links;
+this does not claim independent release acceptance.

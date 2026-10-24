@@ -1,12 +1,13 @@
-# ManagedContext: Transaction-Scoped Editing
+# Lifecycle transactions and views
 
-Status: user-facing DRAFT, 2026-10-03. Existing API is shown first. Proposed
-constructor aliases at the end are not implemented yet.
+This guide documents the current Lifecycle API. Start with
+[installation and the counter tutorial](GettingStarted.md); use the
+[field reference](Markers.md) when choosing policies. The filename is retained
+for existing links. Proposed constructor aliases are separate from this API.
 
-Pyrolyze's LCM runtime locally aliases the library's `lifecycle` decorator as
-`managed_context`. The older `pyrolyze.lifecycle.managed_context` is a separate
-legacy implementation with different marker objects; it is not interchangeable
-with the imports used on this page.
+Some consumers alias `lifecycle` as `managed_context`. The older
+`pyrolyze.lifecycle.managed_context` has different marker objects and is not
+interchangeable with this package's imports.
 
 ## Edit And Complete A Transaction
 
@@ -126,18 +127,15 @@ editable view and supply conversions that separate mutable data sufficiently.
 Tuple/list conversion is shallow, not deep-copy isolation. Do not retain and
 reuse mutable working references across transaction boundaries.
 
-Validation/preparation can reject an update before publication. Failures after
-publication cannot undo committed values. The current implementation has
-multi-participant cleanup/hook failure limitations; do not rely on every
-participant being cleaned up after an exceptional completion. Those limitations
-are separate from the ordinary edit/commit/abort contract shown above.
-
-Interrupted cleanup can leave stale working values visible even after the
-manager becomes inactive. Starting another transaction does not repair them:
-getters can return the stale value without enlistment, and assignment can
-reject the old token. Dropping previously returned lists is not sufficient.
-Stop reusing the affected state cohort until cleanup or supported recovery is
-verified; this API currently provides no general guaranteed-recovery command.
+Validation/preparation can reject an update before publication. The completion
+engine attempts eligible discard and after actions while retaining failures.
+Failures after publication cannot undo values already made current. Catching an
+exception is not proof of rollback or successful cleanup: retain the transaction
+returned by `begin` and inspect its `completion` evidence when recovery matters.
+It distinguishes publication, discard, after actions, ownership and finalization.
+An ownership/protocol failure can prevent safe completion; do not keep reusing
+an uncertain state cohort as though it had cleanly rolled back. No general
+repair command is promised.
 
 `owned` adds another boundary: candidate resources are accepted during prepare,
 before their references become current. A later prepare failure can leave a
@@ -171,18 +169,5 @@ cache: dict[str, int] = lazy(default_factory=dict, mutable=True)
 
 ## Proposed Changes: Not Available Yet
 
-Constructor spelling could differ from the property name:
-
-```python
-_slot_id: object = const(init_name="slot_id", default=None)
-```
-
-The proposed constructor accepts `slot_id`; the property remains `_slot_id`.
-This creates no `slot_id` property or factory provider. `init_name` defaults
-to the declared field name for new fields and inherits on overrides. `const`
-defaults to `init=True`, so the example satisfies the prerequisite. An explicit
-non-`None` alias requires `init=True`; `init=False` with the default `init_name=None`
-still creates no constructor parameter. Duplicate constructor names and
-inherited renaming are rejected.
-Existing markers currently reject this new option; use the existing initvar
-and copying-factory pattern until it is implemented.
+Constructor aliases such as `init_name` are not accepted by the current markers.
+The [proposal](Proposals.md) is separate from this supported guide.
