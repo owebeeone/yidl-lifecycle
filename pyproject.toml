@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "yidl-lifecycle"
-version = "0.1.0"
+version = "0.1.1"
 description = "Transactional lifecycle decorator compiler built on YIDL"
 readme = "README.md"
 license = "LGPL-2.1-only"
