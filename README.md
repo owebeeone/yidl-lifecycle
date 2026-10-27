@@ -3,8 +3,9 @@
 Lifecycle decorator and transactional lifecycle runtime built on YIDL.
 
 This standalone package owns the decorator and transaction behavior; YIDL owns
-the generic compiler. The initial 0.1.0 alpha pins Astichi 1.1.3, YIDL 0.1.0 and
-Cache 0.1.0, plus compat-sentinel 0.1.2. See [release preparation](RELEASE.md) for
+the generic compiler. The 0.1.1 compatibility patch pins Astichi 1.1.3, YIDL 0.1.2 and
+Cache 0.1.0, plus compat-sentinel 0.1.2. The declared test matrix covers
+CPython 3.12–3.15. See [release preparation](RELEASE.md) for
 the publication order and verification boundary. Licensed under LGPL-2.1-only.
 
 ## Start here
@@ -12,8 +13,8 @@ the publication order and verification boundary. Licensed under LGPL-2.1-only.
 Read [installation and your first transaction](docs/GettingStarted.md), then use
 [fields and hooks](docs/Markers.md), [transactions and views](docs/ManagedContextApiDraft.md)
 and [cache troubleshooting](docs/Cache.md) for the task at hand. The initial
-release is being prepared; the guide distinguishes candidate-wheel installation
-from installation after PyPI publication.
+0.1.0 release is on PyPI; the 0.1.1 patch qualifies the updated compiler pin
+and Python 3.15.
 
 ## Generated Builders And Runtime Dependencies
 
