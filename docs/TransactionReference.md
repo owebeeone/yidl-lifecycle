@@ -49,7 +49,10 @@ or async-task isolation; callers must serialize shared access.
 manager.validate(*keys) -> None
 ```
 
-Runs validators against the current candidate without publication or completion.
+Runs validators registered by enlisted participants against the current
+candidate without publication or completion. It does not discover or validate
+every object sharing this manager. With no registered validators it returns
+`None`, even if an untouched object's values would fail its validator.
 Requires active transactions. Validation failures raise and can be grouped;
 a subsequent edit can invalidate a previous successful check. This is not a
 reservation or an authorization to skip later validation.
@@ -64,6 +67,12 @@ manager.commit_only(*keys)
 `commit` validates at outermost completion, prepares participants and publishes
 managed replacements if preparation succeeds. `commit_only` follows the same
 completion path **without validation**; its caller assumes that responsibility.
+
+Only enlisted participants receive completion hooks; only enlisted participants
+requiring validation are checked. Construction, ordinary field changes and
+unchanged objects do not automatically enlist. An equality-elided managed
+assignment does not by itself enlist either. Working-value materialization can
+enlist an object even when the caller ultimately makes no content change.
 
 For one key, returns the completed transaction ID (`int`), or `None` when
 only closing a nested begin level. Several keys return a tuple of those results
@@ -107,7 +116,9 @@ and later contains immutable terminal evidence retained on the token. See
 
 Treat tokens as observations, not mutable application data. Do not replace manager
 state or modify transaction membership. Low-level enlist/drop operations support
-generated participants; ordinary application field writes enlist automatically.
+generated participants; changed managed replacements and working-storage
+materialization enlist automatically. Plain-field writes and redundant managed
+assignments do not by themselves enlist an object.
 
 ## Completion and errors
 

@@ -64,3 +64,42 @@ except ValueError:
 else:
     raise AssertionError("notification unexpectedly succeeded")
 print("rejected candidate: 1; committed quantity: 3; failed notification value: 4")
+
+# Validation is participant-based, not a sweep of every object using the manager.
+from yidl_lifecycle.lifecycle import before_commit, field, local_store
+
+
+@lifecycle
+class Eligibility:
+    value: int = managed(default=-1)
+    note: str = field(default="")
+    calls: list[str] = local_store(default_factory=list)
+
+    @validate_commit()
+    def valid(self) -> bool:
+        self.calls.append("validate")
+        return self.value >= 0
+
+    @before_commit()
+    def preparing(self) -> None:
+        self.calls.append("before")
+
+    @after_commit()
+    def published(self) -> None:
+        self.calls.append("after")
+
+
+candidate = Eligibility(transaction_manager=manager)
+assert candidate.calls == []  # Construction does not validate this value.
+with manager.begin(DEFAULT_TRANSACTION):
+    candidate.note = "ordinary edit"
+    candidate.value = -1  # Equal assignment does not enlist by itself.
+    assert candidate.working.value == -1  # A scalar read does not enlist either.
+    assert manager.validate(DEFAULT_TRANSACTION) is None
+assert candidate.calls == []
+assert candidate.value == -1
+
+with manager.begin(DEFAULT_TRANSACTION):
+    candidate.value = 1  # Changed managed replacement enlists.
+assert candidate.calls == ["validate", "before", "after"]
+print("no-op edit skipped callbacks; enlisted edit ran validator and hooks")

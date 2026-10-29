@@ -4,6 +4,19 @@ Use a validator when a combination of managed values must satisfy an invariant.
 Use completion hooks for notifications associated with commit or rollback.
 Read [transaction boundaries](Transactions.md) first.
 
+Validation and hooks apply to **enlisted participants**, not every object that
+shares the manager. Construction does not invoke commit validation. An untouched
+object is not automatically checked by `validate` or commit, and assigning an
+equal managed value can return before enlistment. Plain-field edits do not
+enlist the object either. A changed managed replacement or materializing an
+editable working value can enlist it. Merely entering a transaction is not an
+instruction to validate your entire model.
+
+If your application must check initial or unchanged data, run its business
+validation explicitly as well. Do not rely on a redundant assignment to force
+hooks. The [validation example](../examples/validation.py) demonstrates a
+no-op transaction over an initially invalid value.
+
 ## Reject an invalid candidate
 
 The validator sees pending values. This complete example rejects a negative count:

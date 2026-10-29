@@ -14,6 +14,10 @@ complete supported example.
 | An inner failure leaves no active outer transaction | Same-key scopes join; rollback aborts the whole key | Let the failure leave the outer operation. Do not treat nested scopes as savepoints. |
 | Lazy replacement raises `AttributeError` | Lazy fields are write-once by default | Supply the desired initial value, or deliberately declare `mutable=True`. |
 | A factory is not rerun after its input changes | Factory dependencies initialize; they are not reactive formulas | Recompute explicitly if your application needs a later update. |
+| Validators or hooks did not run in a successful scope | No object was enlisted, or an equal managed assignment was skipped | Hooks are participant callbacks, not global scope events. Validate unchanged business data explicitly; see [eligibility](Hooks.md). |
+| Decoration reports a non-default argument after a default | A required constructor field follows a defaulted field, possibly inherited | Put required fields first; factory dependency order does not relax Python parameter ordering. |
+| Reading an omitted `lazy()` raises `AttributeError` | No initial value, default or factory was supplied | Supply it through construction or first assignment before reading. |
+| A `cls` factory returns a marker or fails on class-field arithmetic | `cls` is the original undecorated class | Request the resolved field/classvar by its provider name. See [initialization](Initialization.md). |
 | Factory decoration reports an unknown name or cycle | Parameter names are provider declarations | Match declared provider names and remove cycles. See [initialization](Initialization.md). |
 | Lazy factory cannot use an initvar | Lazy initvar dependencies are not currently supported | Retain the needed input in a suitable field and depend on that field. |
 | `local_store` rejects an option | It has no `init`, `allow_self_factory` or working-factory option | Use only its documented defaults/factory options; use `transient` for transaction-local data. |

@@ -78,8 +78,20 @@ arguments can be passed by position or name; `transaction_manager` is keyword-on
 Supplying an unknown keyword raises `TypeError`. Use the resulting class's
 Python signature to inspect its exact constructor.
 
+Required constructor fields must precede fields with constructor defaults,
+including defaults supplied by factories. Otherwise decoration raises
+`LifecycleDefinitionError` for a non-default argument following a default.
+This also matters when adding inherited fields. A `lazy()` declaration is an
+exception to the required-input rule: it can be omitted without a default or
+factory, but reading it before supplying a value raises `AttributeError`.
+Lazy fields are optional constructor parameters and count as defaulted fields
+for this ordering rule, even when `lazy()` declares no default or factory.
+
 Factories request declared providers by parameter name. Dependencies can be
-declared out of order. `cls` requests the class; `self` requires the opt-in
+declared out of order. `cls` requests the original undecorated class; its marker
+attributes are declarations, not initialized values. Request a classvar's value
+by its declared provider name, not by reading a marker from `cls`.
+`self` requires the opt-in
 above for construction factories. Special `current`/`working` injection is
 not available to ordinary construction factories. It is available to transient
 working factories.

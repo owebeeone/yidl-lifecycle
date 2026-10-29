@@ -35,11 +35,40 @@ An `init=False` field has no constructor parameter, but its construction factory
 still runs. An `initvar(init=False, default_factory=...)` can provide an internal
 construction value without asking the caller for it.
 
-Factories may request a class provider named `cls`. Instance-aware
+Factories may request a class provider named `cls`. It is the original
+undecorated class, useful for information such as `cls.__name__`. Its field
+marker attributes are still declarations; they are not initialized provider
+values. To receive a classvar's value, name that provider directly:
+
+```python
+from yidl_lifecycle.lifecycle import classvar, const, lifecycle
+
+
+@lifecycle
+class Scaled:
+    SCALE: int = classvar(default=4)
+    doubled: int = const(default_factory=lambda SCALE: SCALE * 2)
+    type_label: str = const(default_factory=lambda cls: cls.__name__)
+
+
+scaled = Scaled()
+assert scaled.doubled == 8
+assert scaled.type_label == "Scaled"
+```
+
+Instance-aware
 construction factories requesting `self` must opt in with
 `allow_self_factory=True`. Prefer named field dependencies when possible:
 the engine cannot infer dependencies hidden inside arbitrary `self` access.
 Do not read an as-yet-uninitialized field from such a factory.
+
+Put required constructor fields before fields with constructor defaults or
+factories, including when extending a decorated base. Otherwise the generated
+constructor cannot be defined and decoration raises `LifecycleDefinitionError`.
+This ordering rule is separate from factory dependency order: provider names
+may refer forward, but the resulting constructor must still be valid Python.
+Lazy fields count as defaulted constructor parameters for this rule, including
+`lazy()` without a default or factory.
 
 ## Lazy values
 
@@ -74,6 +103,9 @@ factory read does not install a successful cached value.
 
 Both policies are nontransactional. Rollback does not reset a lazy cache.
 Write-once storage also does not recursively freeze the cached object's contents.
+With `lazy()` and no supplied value, default or factory, construction can still
+succeed, but reading the uninitialized value raises `AttributeError`. Supply a
+value through the constructor or first assignment before reading it.
 `static` is an exact compatibility alias; use `lazy` in new declarations.
 Lazy factories currently cannot directly depend on an `initvar`. Retain the
 needed value in a suitable field instead. Transient working factories have

@@ -51,3 +51,72 @@ assert edit.scratch is None
 with manager.begin(DEFAULT_TRANSACTION):
     assert edit.working.scratch == []
 print(edit.scratch)
+
+# Named classvar values differ from marker attributes on the original class.
+from yidl_lifecycle.lifecycle import LifecycleDefinitionError, LifecycleMarker, classvar
+
+
+@lifecycle
+class Providers:
+    SCALE: int = classvar(default=4)
+    doubled: int = const(default_factory=lambda SCALE: SCALE * 2)
+    type_label: str = const(default_factory=lambda cls: cls.__name__)
+    original_declaration: object = field(default_factory=lambda cls: cls.SCALE)
+
+
+providers = Providers()
+assert providers.doubled == 8
+assert providers.type_label == "Providers"
+assert isinstance(providers.original_declaration, LifecycleMarker)
+assert Providers.SCALE == 4
+
+try:
+    @lifecycle
+    class BadOrder:
+        optional: int = field(default=1)
+        required: int
+except LifecycleDefinitionError as error:
+    assert "non-default" in str(error)
+else:
+    raise AssertionError("required field after a default should fail decoration")
+
+
+@lifecycle
+class RequiredFirst:
+    required: int
+    optional: int = field(default=1)
+
+
+assert RequiredFirst(3).required == 3
+
+
+@lifecycle
+class Base:
+    optional: int = field(default=1)
+
+
+try:
+    @lifecycle
+    class BadExtension(Base):
+        required: int
+except LifecycleDefinitionError as error:
+    assert "non-default" in str(error)
+else:
+    raise AssertionError("inherited defaults also constrain constructor order")
+
+
+@lifecycle
+class UnsetLazy:
+    value: int = lazy()
+
+
+unset = UnsetLazy()
+try:
+    unset.value
+except AttributeError:
+    pass
+else:
+    raise AssertionError("uninitialized lazy read should raise")
+unset.value = 3
+assert unset.value == 3
+print("named/class providers, constructor ordering and unset lazy checks passed")
