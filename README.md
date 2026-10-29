@@ -1,5 +1,7 @@
 # yidl-lifecycle
 
+> **Full documentation:** [User guides and API reference](https://owebeeone.github.io/yidl-lifecycle/).
+
 Try changes to your Python model, then keep them or discard them together.
 Lifecycle lets you declare which fields participate in a transaction and read
 both committed and pending values while editing. You write ordinary Python
