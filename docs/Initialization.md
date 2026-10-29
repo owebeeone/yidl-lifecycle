@@ -4,6 +4,36 @@ Use factories when a default depends on another declared input, or when a value
 should be computed only on first use. A factory computes an initial value; it
 does not install a formula that updates whenever its dependencies change.
 
+## Callback argument summary
+
+Named functions and lambdas follow the same rules. Parameter names select
+providers only in factories; conversions and bound hook methods have different
+calling conventions.
+
+| Callback | Arguments supplied | When called | Result used for |
+| --- | --- | --- | --- |
+| Construction `default_factory` (including `local_store` and a transient baseline) | Declared field, `initvar` and `classvar` values requested by name; special `cls` is the original declaration class; `self` is the constructing default facade and requires `allow_self_factory=True` where accepted | During construction when no explicit value overrides the factory | Initial value |
+| Lazy `default_factory` | Retained field and classvar values requested by name; `cls` is the original declaration class; `self` is the facade performing the first read and requires `allow_self_factory=True`; direct `initvar` dependencies are unsupported | First read, unless construction or assignment supplied the value | Cached value |
+| Transient `working_default_factory` | Retained `initvar` values requested by name; `self` is the default facade, `current` the committed view, and `working` the working view; no self opt-in or special `cls` injection | First default/working-view read in a transaction, unless assigned already | Transaction-local working value |
+| Managed `thaw` | One positional committed value; its parameter name is your choice | Materializing editable working storage | Editable representation |
+| Managed `freeze` | One positional working value; its parameter name is your choice | Preparing an edited managed value for commit | Candidate committed representation |
+| `@validate_commit(...)` method | Normal bound instance; no field-name or transaction-key injection | Validation of an eligible enlisted participant | Boolean approval |
+| `@commit_order_key(...)` method | Normal bound instance; no additional arguments | Ordering enlisted participants for commit | Comparable ordering key |
+| `@before_commit(...)`, `@after_commit(...)`, `@after_rollback(...)` methods | Normal bound instance; no additional arguments | The corresponding eligible preparation/completion phase | Return value ignored |
+
+Factory providers are passed by keyword: renaming `lambda area: ...` to
+`lambda size: ...` requests a different provider. For `thaw` and `freeze`,
+renaming the sole positional parameter does not change what it receives.
+Nullable managed values can bypass conversions for `None`; see the
+[conversion rules](Markers.md#managed-values-and-conversion). Hooks are
+[participant callbacks](Hooks.md), not events for every scope or manager-owned
+object. Ordinary Python methods do not gain factory-style argument injection.
+
+Transient working factories cannot request ordinary field or classvar values
+directly by provider name; read those through `self`, `current` or `working`.
+The [factory signature rules](Markers.md#shared-initialization-options) cover
+unsupported parameters, optional parameters and callable introspection.
+
 ## Request inputs by name
 
 This complete example uses a construction-scoped input to initialize two fields:
@@ -142,8 +172,10 @@ print(edit.scratch)
 
 It prints `None`. The working factory runs when the transaction-local value is
 first needed; commit and rollback both discard that working value. Ordinary
-`default`/`default_factory` supplies the baseline. Working factories can
-request named providers and `self`, `current`, or `working` views.
+`default`/`default_factory` supplies the baseline. Working factories can request
+retained `initvar` providers by name and `self`, `current`, or `working` views.
+Read ordinary field or classvar values through those views instead of requesting
+them directly as working-factory parameters.
 
 For persistent nontransactional scratch storage instead, choose
 `local_store(default_factory=dict)`. It is shared by all views and survives

@@ -299,3 +299,68 @@ or dependency change forms part of this acceptance.
 No push or deployment was performed by this reviewer. Publication and subsequent
 live-site verification remain actions for the parent task within the user's
 existing authorization.
+
+## Addendum: callback argument summary — 2026-10-29
+
+**Verdict: GO for the two-file documentation update identified below.** No
+blocking findings remain. This addendum preserves the prior review verdicts;
+it reviews the small callback table/reference change against
+`746f36a0f39a79c8ea47528f544b8c1e66fbbc7f`, not a new library implementation.
+Only this report was edited by the reviewer. No push or deployment was performed.
+
+The reviewed boundary is `docs/Initialization.md` and `docs/Markers.md`: one
+callback argument/timing table, its reference link, and correction of the
+overbroad statement about named transient working-factory providers. The
+transient correction is justified by existing implementation behavior and stays
+within the documentation task. Library, SDK and dependency implementation remain
+reference-only.
+
+The table correctly distinguishes keyword factory-provider injection from
+positional conversions and bound zero-argument hook methods. Construction and
+lazy factories preserve the documented original-class `cls` behavior and the
+marker's self opt-in restriction. The transient row now explicitly maps `self`
+to the default facade, `current` to the committed view, and `working` to the
+working view. It also states that default-view reads can trigger the working
+factory, and that earlier assignment bypasses it. This avoids implying that
+injected `self` is whichever facade initiated access.
+
+The final table also explicitly distinguishes construction `self` (the
+constructing default facade) from lazy-factory `self` (the facade performing
+the first read). A focused installed-package identity probe confirmed both:
+construction captured the model's default facade, while a first lazy read
+through `.current` supplied and cached that current facade. Subsequent default
+access returned the same cached result. The opt-in restriction remains stated
+for construction/lazy factories.
+
+The existing source at `src/yidl_lifecycle/yidl/lifecycle_transient.yidl`
+(`BuildTransientFactsBody` and the `TransientWorkingFactory*Arg` resources)
+confirms that direct named working-factory providers must be retained initvars;
+ordinary field/classvar providers are rejected. `self`, `current`, and `working`
+are special injections without the construction-factory self opt-in, while
+`cls` has no special injection. Views provide the supported route to ordinary
+field/classvar values. The adjacent guide/reference correction accurately
+states these restrictions.
+
+A focused reviewer probe against installed Lifecycle 0.1.1 confirmed:
+
+- A retained initvar and all three views are supplied without a self opt-in.
+  With pending scalar value 4 and committed value 2, a working factory received
+  the original initvar 7 and observed default/current/working values 4/2/4.
+- Even when invoked through `model.working.scratch`, injected `self` is
+  `model.default`; the other injected facades have their respective identities.
+- Direct ordinary-field and classvar working-factory parameters fail decoration
+  with the non-initvar-provider diagnostic. An undeclared `cls` parameter fails
+  with the unknown-provider diagnostic.
+
+The reviewer also independently reran all seven examples and fifteen executable
+guide blocks on CPython 3.14.3 with the installed published dependency tuple
+recorded in the reassessment above, Python backend, and persistence disabled.
+All passed. Strict MkDocs build and site checking passed with 16 HTML pages,
+615 local links/assets, and 71 search entries. Whitespace checks passed. These
+mechanical checks supplement the source/probe review; the prose table itself
+is not automatically executed by the guide-block checker.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `docs/Initialization.md` | `7e5d8ce3b1bc33805a4e59fc94bf5e24e62b6df65095ccf5c8e62f2cb8de5b7f` |
+| `docs/Markers.md` | `e5a1954752ad5f6061517dea5e73cc6161f857ecaa8df0c40ce71a66de63e1d1` |

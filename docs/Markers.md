@@ -65,6 +65,9 @@ during decoration may wrap the underlying generator error; inspect its cause.
 
 ## Shared initialization options
 
+For one overview of callback inputs and timing, see the
+[callback argument summary](Initialization.md#callback-argument-summary).
+
 | Option | Meaning and constraints |
 | --- | --- |
 | `default` | Value used when the constructor omits this field. A mutable object is shared if supplied as a literal default; prefer a factory for per-instance containers. |
@@ -147,8 +150,10 @@ the edit ends.
 
 `transient` has a baseline initialized by `default`/`default_factory`, plus a
 transaction-local overlay. `working_default_factory` initializes that overlay
-on first use in an edit. It may request declared providers or `self`, `current`
-and `working` views. An initialization input needed by this working factory can
+on first use in an edit. It may request retained `initvar` values by name or
+`self`, `current` and `working` views. Ordinary field and classvar values must
+be read through those views; they cannot be requested directly by name here.
+An initialization input needed by this working factory can
 be retained privately. Commit and rollback both discard the overlay; neither
 publishes it into the baseline. A transaction is required for replacement.
 
