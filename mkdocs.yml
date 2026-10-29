@@ -1,0 +1,73 @@
+site_name: YIDL Lifecycle
+site_description: Declare Python field policies and keep or discard managed edits with transactions.
+site_url: https://owebeeone.github.io/yidl-lifecycle/
+repo_url: https://github.com/owebeeone/yidl-lifecycle
+repo_name: owebeeone/yidl-lifecycle
+edit_uri: edit/main/docs/
+docs_dir: docs
+site_dir: build/docs-site
+strict: true
+exclude_docs: |
+  /validation/
+not_in_nav: |
+  /ManagedContextApiDraft.md
+  /Proposals.md
+hooks:
+  - dev-docs/documentation/site_hooks.py
+theme:
+  name: material
+  palette:
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: deep purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.footer
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+plugins:
+  - search
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: warn
+nav:
+  - Home: index.md
+  - Start Here:
+      - Your first transaction: GettingStarted.md
+      - Fields and live views: Concepts.md
+  - Guides:
+      - Edit collections: Collections.md
+      - Coordinate transactions: Transactions.md
+      - Initialize dependent values: Initialization.md
+      - Validate and react to edits: Hooks.md
+      - Resources and recovery: Resources.md
+  - Reference:
+      - Fields and hooks: Markers.md
+      - Transaction API: TransactionReference.md
+      - View ownership and lifetime: FacadeOwnership.md
+      - Cache controls: Cache.md
+  - Troubleshooting: Troubleshooting.md

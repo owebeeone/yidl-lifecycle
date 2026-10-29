@@ -1,112 +1,66 @@
 # yidl-lifecycle
 
-Lifecycle decorator and transactional lifecycle runtime built on YIDL.
+Try changes to your Python model, then keep them or discard them together.
+Lifecycle lets you declare which fields participate in a transaction and read
+both committed and pending values while editing. You write ordinary Python
+classes; you do not need to write YIDL.
 
-This standalone package owns the decorator and transaction behavior; YIDL owns
-the generic compiler. The 0.1.1 compatibility patch pins Astichi 1.1.3, YIDL 0.1.2 and
-Cache 0.1.0, plus compat-sentinel 0.1.2. The declared test matrix covers
-CPython 3.12–3.15. See [release preparation](RELEASE.md) for
-the publication order and verification boundary. Licensed under LGPL-2.1-only.
-
-## Start here
-
-Read [installation and your first transaction](docs/GettingStarted.md), then use
-[fields and hooks](docs/Markers.md), [transactions and views](docs/ManagedContextApiDraft.md)
-and [cache troubleshooting](docs/Cache.md) for the task at hand. The initial
-0.1.0 release is on PyPI; the 0.1.1 patch qualifies the updated compiler pin
-and Python 3.15.
-
-## Generated Builders And Runtime Dependencies
-
-Lifecycle ships a committed generated base in its wheel and source distribution;
-installation does not regenerate it. The public `lifecycle` decorator is a
-handwritten entry point that uses this base to build each decorated class.
-
-YIDL is a runtime dependency as well as the compiler used for regeneration.
-The generated base imports YIDL's record/container primitives, assembly-plan
-objects, assembly execution engine, and Astichi template adapters. Lifecycle's
-field markers use its own module-owned sentinels from the published
-`compat-sentinel` package. A normal generation-free cache hit avoids assembly
-and compilation, but does not make Lifecycle independent of YIDL.
-
-**Lifecycle must pin the exact published YIDL version used to regenerate and
-qualify its shipped builders.** It must not declare an open-ended minimum YIDL
-version or derive the pin from an arbitrary developer environment. Supporting
-a different YIDL release requires regeneration, compatibility checks, and a
-Lifecycle release with the corresponding exact dependency pin. See the
-[release process](RELEASE.md#yidl-compatibility-contract).
-
-Astichi supplies the template/composition runtime used through YIDL. Its
-compatibility also needs qualification; it is not automatically interchangeable.
-The current release pins Astichi too. A wider Astichi range would need separate
-validation and consistent dependency declarations in both YIDL and Lifecycle.
-
-## Lazy Fields
-
-`lazy` declares per-instance, non-transactional, write-once storage. An explicit
-constructor value or first assignment initializes it; otherwise its first read
-uses the declared default or calls the default factory. Factory providers are
-read at that first access, not during construction. Later assignments raise by
-default; `mutable=True` permits immediate replacement through any facade. The
-stored object's contents are not recursively frozen.
+```sh
+python -m pip install yidl-lifecycle
+```
 
 ```python
-from yidl_lifecycle.lifecycle import lazy, lifecycle
+from yidl_lifecycle.lifecycle import lifecycle, managed
+from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION, TransactionManager
 
 
 @lifecycle
-class Config:
-    items: list[int] = lazy(default_factory=list)
-    cache: dict[str, int] = lazy(default_factory=dict, mutable=True)
+class Settings:
+    volume: int = managed(default=5)
+
+
+manager = TransactionManager()
+settings = Settings(transaction_manager=manager)
+
+with manager.begin(DEFAULT_TRANSACTION):
+    settings.volume = 8
+    assert settings.current.volume == 5  # Committed value is still visible.
+    assert settings.working.volume == 8
+
+assert settings.volume == 8  # Normal exit commits.
 ```
 
-`static` remains an exact compatibility alias. Both names retain the existing
-internal `static` field kind and generated diagnostics. Assigning before first
-read bypasses the factory; replacement does not rerun it. Neither policy adds
-transaction participation, invalidation, or automatic recomputation.
+An exception inside the scope rolls back its pending managed values. Managed
+assignment outside a transaction raises. Ordinary fields and external side
+effects are not rolled back; views are live, not historical snapshots.
 
-## Generated Code Cache
+## Learn and use Lifecycle
 
-Compiled Lifecycle builders can be reused across processes through the standalone
-`yidl-cache` package. Caching is on by default on supported platforms. The adapter
-tries the declaring module's `__pycache__/yidl_cache/ns-<namespace-digest>` first,
-then a private mirrored source directory under `~/.yidl/cache`. Unsafe or unwritable
-locations fall through to normal generation, not an import failure.
+Read the [documentation website](https://owebeeone.github.io/yidl-lifecycle/),
+or follow the repository links below.
 
-Set controls before importing the decorator:
+- [Start here](docs/GettingStarted.md): install, commit an edit and cancel one.
+- [Understand the model](docs/Concepts.md): fields, transactions and live views.
+- [Choose fields](docs/Markers.md): complete marker options and behavior.
+- [Edit collections](docs/Collections.md): editable lists and committed tuples.
+- [Coordinate objects and keys](docs/Transactions.md): shared edits and nesting.
+- [Initialize dependent values](docs/Initialization.md): factories and lazy fields.
+- [Validate and react to edits](docs/Hooks.md): validators and completion hooks.
+- [Manage resources and failures](docs/Resources.md): ownership and recovery.
+- [Transaction API](docs/TransactionReference.md) and
+  [troubleshooting](docs/Troubleshooting.md): direct lookup and corrective actions.
+- [Documentation index](docs/index.md): all guides and advanced references.
 
-```bash
-YIDL_LIFECYCLE_CACHE=off uv run python your_app.py
-# Or force one private root (no automatic fallback when this root is unusable):
-YIDL_LIFECYCLE_CACHE_DIR=scratch/lifecycle-code-cache uv run python your_app.py
-```
+Lifecycle manages an edit in memory; it is not a database or an undo history.
+Use it when selected model fields need a controlled commit/rollback boundary.
+It does not provide thread/task isolation or undo arbitrary effects of user code.
 
-An explicit `off` wins over the directory override. Settings are captured once;
-restart after changes. Python's `-B`/`PYTHONDONTWRITEBYTECODE` and `pycache_prefix`
-do not control this cache. Missing directories are created privately; unsafe or unavailable storage falls
-back to normal generation. Each decoration still harvests and validates the
-definition, executes code in a fresh namespace, and binds current defaults,
-factories, converters, transaction keys, and the user class. Only assembly and
-AST compilation are skipped on a generation-free hit. A final home hit after
-failed local publication may already have generated; `cache_diagnostics()`
-reports that distinction. Disabling retains existing artifacts; clear while
-enabled if removal is required. Clearing while disabled is a no-op.
+## Compatibility and contributors
 
-Local development uses the relative sibling source `../yidl-cache`, configured
-in `tool.uv.sources`. Published package metadata uses the named distribution
-dependency, not a checkout path.
+Version 0.1.1 is published on PyPI. The qualified CPython matrix is 3.12–3.15
+with Astichi's Python backend; see [installation and support](docs/GettingStarted.md#install).
+Dependencies are installed automatically. Licensed under LGPL-2.1-only.
 
-See [cache controls and troubleshooting](docs/Cache.md) for normal use. The
-[integration record](dev-docs/LifecycleCodeCache.md) contains detailed fingerprints
-and the fresh-process proof.
-
-## Development
-
-From this repository root:
-
-```bash
-PYTHONPATH=../astichi/src uv run --with pytest python -m pytest -q
-```
-
-The project is expected to use the sibling `../yidl` checkout during local
-development.
+For compiler architecture, generated builders, development commands and release
+policy, see [contributing and internals](dev-docs/ContributorGuide.md). Existing
+design, review and experiment records remain in [developer documentation](dev-docs/README.md).

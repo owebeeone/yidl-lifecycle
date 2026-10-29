@@ -1,64 +1,207 @@
-# Fields and transaction hooks
+# Field and hook reference
 
-Import field markers and decorators from `yidl_lifecycle.lifecycle`. A marker is
-a declaration harvested when `@lifecycle` runs; it is not the stored field value.
-Start with the [counter tutorial](GettingStarted.md) before combining policies.
+Import these functions from `yidl_lifecycle.lifecycle`. Each field function
+returns a declaration consumed by `@lifecycle`, not the eventual stored value.
+For a first model, use the [tutorial](GettingStarted.md); for factory examples,
+use [initialization](Initialization.md).
 
-## Field policies
+## Choose a field policy
 
-| Marker | Purpose | Transaction boundary |
+| Declaration | Use it for | Effect of rollback |
 | --- | --- | --- |
-| `field` | Ordinary per-instance storage | Updates immediately; rollback does not restore it |
-| `const` | Reference set during initialization, then protected from replacement | Nontransactional; does not recursively freeze an object |
-| `lazy` | Initialize from an explicit value/assignment or the first read | Nontransactional; write-once unless `mutable=True` |
-| `static` | Exact compatibility alias for `lazy` | Same policy; prefer `lazy` in new code |
-| `managed` | Committed value plus a working overlay | Assignment requires the selected active transaction |
-| `transient` | Transaction-local working overlay, optionally initialized by `working_default_factory` | Participates in the selected transaction; not persistent recomputation |
-| `owned` | Transaction-managed retained `BindingBase` value or annotated map | Includes resource acceptance; reference rollback does not undo arbitrary resource side effects |
-| `binding` | Plain stored `BindingBase` value or annotated map | Nontransactional binding storage |
-| `local_store` | Lifecycle-owned scratch storage with no constructor parameter | Nontransactional; accepts default/default factory |
-| `initvar` | Constructor input usable by initialization providers | Does not declare a retained instance field |
-| `classvar` | Class-level value | Not per-instance transaction storage |
+| `field` | Ordinary mutable instance data | No restoration |
+| `const` | Initialize once, forbid replacement | Nontransactional |
+| `lazy` | Initialize on first use, normally write once | Cached result survives |
+| `static` | Compatibility alias for `lazy` | Identical to `lazy` |
+| `managed` | Persistent model values changed under a transaction | Discards pending replacement |
+| `transient` | A transaction-local working value over a baseline | Discards working value; commit also discards it |
+| `owned` | Transaction-managed retained binding resource reference | Discards reference change, not arbitrary resource effects |
+| `binding` | Nontransactional binding resource reference | No restoration |
+| `local_store` | Per-instance scratch/cache without constructor input | No restoration |
+| `initvar` | Input/provider for initialization, not a public field | Not transaction storage |
+| `classvar` | Class-level provider/value | Not instance transaction storage |
 
-`default` and `default_factory` are alternatives. A required constructor field
-has neither. A supplied constructor value skips that field's factory.
-`init=False` removes its constructor parameter; it does not by itself suppress
-construction-time initialization. Not every marker accepts every option: use
-its Python signature, and treat a definition error as an invalid declaration.
+A bare annotated member such as `count: int` is an ordinary required field;
+`count: int = 0` is an ordinary field with a default. Use `managed` explicitly
+for transactional data. Annotations do not add automatic conversion or validation.
 
-Construction factories can request declared providers by parameter name.
-`allow_self_factory=True` permits the supported self-aware factory route.
-Factories initialize values; they do not establish continuously updated
-formulas. For `lazy`, providers are read at first access. For `managed`,
-`thaw`/`freeze` can create editable and committed representations; use `.working`
-for aggregate edits. See [initialization and aggregate rules](ManagedContextApiDraft.md).
+## Signatures
 
-`managed`, `owned` and `transient` accept a transaction key (defaulting to
-`DEFAULT_TRANSACTION`) and `compare="value"` or `compare="identity"`.
-Custom keys must be registered with the supplied manager. Independently completed
-keys are not a single atomic group. See the [custom-key example](ManagedContextApiDraft.md#edit-and-complete-a-transaction).
+`MISSING` below means the argument was omitted; do not pass an internal sentinel
+to get a default. `None` is a real field value, not the omission marker.
+
+```text
+field(*, default=MISSING, default_factory=MISSING,
+      allow_self_factory=False, init=True)
+const(*, default=MISSING, default_factory=MISSING,
+      allow_self_factory=False, init=True)
+lazy(*, default=MISSING, default_factory=MISSING,
+     allow_self_factory=False, init=True, mutable=False)
+static = lazy
+
+managed(tx_key=DEFAULT_TRANSACTION, *, compare="value",
+        default=MISSING, default_factory=MISSING,
+        allow_self_factory=False, init=True,
+        freeze=MISSING, thaw=MISSING)
+transient(tx_key=DEFAULT_TRANSACTION, *, compare="value",
+          default=MISSING, default_factory=MISSING,
+          allow_self_factory=False, working_default_factory=MISSING, init=True)
+owned(tx_key=DEFAULT_TRANSACTION, *, compare="value",
+      default=MISSING, default_factory=MISSING,
+      allow_self_factory=False, init=True)
+binding(*, default=MISSING, default_factory=MISSING,
+        allow_self_factory=False, init=True)
+
+local_store(*, default=MISSING, default_factory=MISSING)
+initvar(*, default=MISSING, default_factory=MISSING,
+        allow_self_factory=False, init=True)
+classvar(*, default=MISSING)
+```
+
+All return a `LifecycleMarker`. Invalid combinations/options raise
+`LifecycleDefinitionError` (a `ValueError` subclass), or an ordinary
+`TypeError` for an unsupported function argument. Definition errors discovered
+during decoration may wrap the underlying generator error; inspect its cause.
+
+## Shared initialization options
+
+| Option | Meaning and constraints |
+| --- | --- |
+| `default` | Value used when the constructor omits this field. A mutable object is shared if supplied as a literal default; prefer a factory for per-instance containers. |
+| `default_factory` | Callable producing an initial value when omitted. Mutually exclusive with `default`. Runs during construction except for lazy fields. |
+| `init=True` | Include the field/input in the generated constructor. A supplied value skips its factory. |
+| `init=False` | Omit that constructor argument; a declared construction default/factory still initializes it. |
+| `allow_self_factory=False` | Construction factory parameter `self` is rejected unless explicitly enabled. Not accepted by `local_store` or `classvar`. |
+
+A required constructor field has neither a default nor a factory. Constructor
+arguments can be passed by position or name; `transaction_manager` is keyword-only.
+Supplying an unknown keyword raises `TypeError`. Use the resulting class's
+Python signature to inspect its exact constructor.
+
+Factories request declared providers by parameter name. Dependencies can be
+declared out of order. `cls` requests the class; `self` requires the opt-in
+above for construction factories. Special `current`/`working` injection is
+not available to ordinary construction factories. It is available to transient
+working factories.
+
+Unknown providers, dependency cycles, and unavailable dependencies are rejected.
+Parameters must be bindable by name: required positional-only parameters and
+variadic `*args`/`**kwargs` are rejected. Optional positional-only parameters
+are omitted. Optional parameters of class factories are not treated as required
+providers. When a callable's signature cannot be inspected, it is treated as
+zero-argument, with `LifecycleDefinitionWarning` except for supported builtin
+class factories. Keep factories simple and make dependencies explicit.
+
+## Ordinary, constant and lazy storage
+
+`field` permits immediate replacement through any facade. `const` initializes
+during construction and rejects later replacement with `AttributeError`.
+Neither participates in a transaction.
+
+`lazy` accepts an initial constructor value or first assignment. Otherwise its
+first read uses the default/factory. Further assignment raises `AttributeError`
+unless `mutable=True`; that option permits immediate nontransactional
+replacement. Provider values are read at first access. Replacement and dependency
+changes do not rerun the factory. Failed factory evaluation does not cache a
+successful result.
+
+Neither constant nor lazy storage recursively freezes mutable contents.
+`static` is an exact alias; internal errors can still use that older name.
+
+## Managed values and conversion
+
+`tx_key` selects the edit group. Custom keys must be hashable and registered
+on the supplied manager. Managed assignment outside the matching active
+transaction raises `RuntimeError`; assignment through `.current` raises
+`AttributeError`.
+
+`compare="value"` uses value equality to detect redundant assignments;
+`compare="identity"` uses object identity instead. This is transaction write
+detection, not generation of model equality or ordering methods. It does not
+detect arbitrary in-place mutations of a shared object.
+
+Only `managed` accepts `thaw` and `freeze`. Each must be callable when
+provided. Working access uses `thaw(committed_value)` to obtain an editable
+representation. Preparation uses `freeze(working_value)` to produce the
+candidate committed representation. They are not type coercion/validation on
+every assignment. Nullable managed annotations have a special `None` path
+that bypasses conversion for `None`. See [collections and aliasing](Collections.md).
+
+Ordinary reads do not initiate thawing. Obtain editable aggregate storage through
+`.working` in an active transaction and discard escaped working references when
+the edit ends.
+
+## Transient and local storage
+
+`transient` has a baseline initialized by `default`/`default_factory`, plus a
+transaction-local overlay. `working_default_factory` initializes that overlay
+on first use in an edit. It may request declared providers or `self`, `current`
+and `working` views. An initialization input needed by this working factory can
+be retained privately. Commit and rollback both discard the overlay; neither
+publishes it into the baseline. A transaction is required for replacement.
+
+`local_store` initializes nontransactional scratch storage with the instance,
+has no constructor parameter and accepts only `default` or `default_factory`.
+Named dependencies are supported for its factory; `allow_self_factory` and
+`working_default_factory` are not accepted. It survives all transaction outcomes.
+
+## Initialization inputs and class values
+
+`initvar` is a named initialization provider, not a public instance attribute.
+With `init=False`, it must have a default or factory. It can initialize multiple
+fields. Lazy factories currently cannot directly depend on an `initvar`;
+materialize the needed value in a retained field instead. Transient working
+factories have separate private-retention support.
+
+`classvar(default=...)` supplies class-level data and can be a named provider.
+It has no instance constructor parameter, factory or transaction policy.
+These are Lifecycle marker functions; do not substitute stdlib dataclass field
+objects or markers from older Pyrolyze APIs.
+
+## Binding resources
+
+`binding` and `owned` support retained `BindingBase` values and supported
+annotated resource maps. `binding` is nontransactional; `owned` is managed
+under its key and accepts resources during preparation. Acceptance and external
+effects are not reversed by reference rollback. See [resources and recovery](Resources.md)
+before using these kinds.
 
 ## Hooks
 
-Mark methods with `@commit_order_key`, `@validate_commit`, `@before_commit`,
-`@after_commit` or `@after_rollback`. The default key is used when omitted;
-`@validate_commit(tx_key=MY_KEY)` selects a configured custom key, for example.
+All five decorators accept the same call forms:
 
-- The order-key method supplies commit ordering among participants.
-- A validator returns a boolean; `False` rejects ordinary completion.
-- Before-commit hooks run during preparation, with controlled candidate writes.
-- After hooks run for the corresponding completed publication/discard action.
-  They can fail after values have become current; they do not make external
-  effects reversible.
+```text
+@commit_order_key()                 # Default key
+@validate_commit(MY_KEY)            # Positional key
+@before_commit(tx_key=MY_KEY)       # Keyword key
+@after_commit()
+@after_rollback()
+```
 
-Use normal manager scopes or `commit` for validated completion. The advanced
-`commit_only` operation bypasses validators. Methods, factories and hooks can
-have external effects; transaction rollback covers the defined field/reference
-policy, not every effect performed by user code.
+Each returns a method decorator. The method is an instance method with no
+additional required arguments. An ordering method supplies a comparable key;
+a validator supplies a Boolean; other hook return values are ignored.
+Larger participant ordering keys complete first. Invalid decorator call shapes
+raise `LifecycleDefinitionError`. Use parentheses, including for the default key.
+
+Read [validation and hook timing](Hooks.md) for examples and the
+[completion reference](TransactionReference.md#completion-and-errors) for failure
+semantics. `commit_only` bypasses validators.
+
+## Decorator, inheritance and reserved names
+
+`lifecycle(cls)` returns the generated class; use it as `@lifecycle`, without
+decorator options. Non-class arguments raise `TypeError`. User methods remain
+available through the generated views. Decorated subclasses inherit Lifecycle
+field policies and hooks. An inherited managed field must remain managed under
+the same transaction key if redeclared.
+
+Do not declare fields called `current`, `working`, `default`, generated
+transaction helpers, or names using the reserved `_y_` / `__yidl_...__` prefixes.
+The decorator rejects collisions rather than silently replacing its machinery.
 
 ## Not an available option
 
-Constructor aliases such as `init_name` remain proposed and are rejected by the
-current markers. See [proposed constructor aliases](Proposals.md). Older
-Pyrolyze marker objects and dataclass field objects are separate APIs and must
-not be substituted for these Lifecycle markers.
+Constructor aliases such as `init_name` remain [proposals](Proposals.md) and
+are rejected by current markers. Lifecycle has no Dataclass-style global frozen
+switch, permanent `freeze()` operation or Undoable-style frame navigation.

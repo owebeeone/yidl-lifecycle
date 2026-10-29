@@ -7,10 +7,18 @@ publication gates. Older checkpoint statuses retain their original revisions.
 
 ## Current Surface
 
-- [Package README](../README.md): executable marker surface, including `lazy`
-  with `mutable=True` and the `static` compatibility alias.
-- [API guide](../docs/ManagedContextApiDraft.md): facade, assignment, and
-  transaction model; proposed syntax is labeled separately.
+- [End-user documentation specification](EndUserDocumentationSpec.md): learning
+  goals, research, scope and acceptance criteria for the public guide rewrite.
+- [Contributor guide](ContributorGuide.md): generated builders, exact dependency
+  compatibility and local development; [public user index](../docs/index.md)
+  for using the library.
+- [Public documentation](../docs/index.md): tutorials, task guides, field and
+  transaction reference, and troubleshooting for library users.
+- [Field reference](../docs/Markers.md): executable marker surface, including
+  `lazy` with `mutable=True` and the `static` compatibility alias.
+- [Transaction reference](../docs/TransactionReference.md): manager, assignment,
+  completion and view policies. The [older API URL](../docs/ManagedContextApiDraft.md)
+  remains available for existing links; proposals are labeled separately.
 - [Facade ownership](../docs/FacadeOwnership.md): SVG reference graph, weak
   state caches, strong default caches, and facade collection conditions.
 - [Field-kind matrix](YidlLifecycleFieldKindMatrix.md): storage and policy

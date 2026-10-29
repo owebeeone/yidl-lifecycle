@@ -1,95 +1,115 @@
-# Start with Lifecycle
+# Your first Lifecycle transaction
 
-Lifecycle turns a Python class into an object with declared field policies and
-transaction-aware views. You write the class and apply `@lifecycle`; you do not
-need to author YIDL source for ordinary use.
+Suppose a user changes several settings and then chooses whether to keep them.
+Lifecycle gives selected fields a committed value and a pending value, so you
+can try an edit before publishing it to the rest of your model.
+
+You need Python classes, decorators and `with` statements. You do not need to
+learn YIDL or a code-generation API.
 
 ## Install
 
-Use CPython 3.12 or newer. The current release checks cover the explicit Python
-backend on Python 3.12, 3.13 and 3.14; other backends/platforms need their own
-evidence. The first release is being prepared: the registry command below is
-for use **after publication**, not a claim that the package is already on PyPI.
+Use CPython 3.12–3.15 for the tested release matrix. In a virtual environment:
 
 ```sh
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install 'yidl-lifecycle==0.1.0'
+python -m pip install yidl-lifecycle
 ```
 
-On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1` instead of the
-second line. Installation obtains the pinned YIDL, Cache, Astichi and
-compat-sentinel dependencies automatically. You do not need sibling checkouts.
-For pre-publication verification, put the approved candidate wheels in
-`candidate/` and install them together:
+On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1` instead of
+the second line. Version 0.1.1 is published; dependencies install automatically.
+No sibling checkouts or generation step are required.
 
-```sh
-python -m pip install candidate/yidl_cache-0.1.0-py3-none-any.whl candidate/yidl-0.1.0-py3-none-any.whl candidate/yidl_lifecycle-0.1.0-py3-none-any.whl
-```
-
-Select the qualified backend before starting Python:
+The release qualification uses Astichi's Python backend. Select it before
+starting Python:
 
 ```sh
 export ASTICHI_LOWER_ENGINE=python
 ```
 
-In PowerShell, use `$env:ASTICHI_LOWER_ENGINE = "python"`. This selects Astichi's
-Python code-generation backend; it does not disable Lifecycle's compiled-code
-cache. See [cache controls and troubleshooting](Cache.md).
+In PowerShell: `$env:ASTICHI_LOWER_ENGINE = "python"`. This controls code
+generation, not your model's transaction behavior. Compiled-code caching remains
+available. Windows Python 3.15 does not have a qualified Astichi 1.1.3 binary
+wheel; a source build on that combination has not been qualified. The Python
+version matrix is not a claim that every platform/backend combination works.
 
-## Make and edit a counter
+## Keep an edit
 
-Save this as `counter.py`:
+Save this complete example as `settings.py`:
 
 ```python
-from __future__ import annotations
-
-from yidl_lifecycle.lifecycle import field, lifecycle, managed
+from yidl_lifecycle.lifecycle import lifecycle, managed
 from yidl_lifecycle.transaction_yidl import DEFAULT_TRANSACTION, TransactionManager
 
 
 @lifecycle
-class Counter:
-    count: int = managed(default=0)
-    label: str = field(default="counter")
+class Settings:
+    volume: int = managed(default=5)
+    brightness: int = managed(default=50)
 
 
 manager = TransactionManager()
-counter = Counter(transaction_manager=manager)
+settings = Settings(transaction_manager=manager)
 
 with manager.begin(DEFAULT_TRANSACTION):
-    counter.count = 1
-    assert counter.working.count == 1
-    assert counter.current.count == 0
+    settings.volume = 8
+    settings.brightness = 70
+    print("during:", settings.current.volume, settings.working.volume)
 
-assert counter.current.count == 1
+print("committed:", settings.volume, settings.brightness)
 
 try:
     with manager.begin(DEFAULT_TRANSACTION):
-        counter.count = 2
-        counter.label = "attempted edit"
-        raise ValueError("cancel")
+        settings.volume = 2
+        settings.brightness = 10
+        raise ValueError("cancel this edit")
 except ValueError:
     pass
 
-assert counter.count == 1
-assert counter.label == "attempted edit"
-print(counter.current.count, counter.label)
+print("after cancel:", settings.volume, settings.brightness)
 ```
 
-Run `python counter.py`. It prints `1 attempted edit`. Normal scope exit commits
-the managed count; the exception aborts its next change. The plain label updates
-immediately and is not rolled back. Assigning the managed count outside its
-active transaction raises.
+Run `python settings.py`. Expected output:
 
-The ordinary object and `.default` are overlay-aware. `.current` reads committed
-managed values; `.working` exposes pending values with committed fallback.
-These are live views of the same state, not copies or historical snapshots.
+```text
+during: 5 8
+committed: 8 70
+after cancel: 8 70
+```
 
-## Choose the next task
+`managed` marks the two fields as transactional. `manager` controls when editing
+begins and ends. Inside `begin`, assignment updates pending values; normal
+scope exit commits them. An exception rolls them back. The second edit therefore
+leaves both fields at the values published by the first edit.
 
-- Choose storage: [field and hook reference](Markers.md).
-- Use custom keys, shared managers or aggregates: [transactions and views](ManagedContextApiDraft.md).
-- Understand reference lifetimes: [facade ownership](FacadeOwnership.md).
-- Configure, diagnose or clear caching: [compiled-code cache](Cache.md).
-- Prepare a compatible package: [release process](../RELEASE.md).
+`.current` reads the committed value even while a change is pending. `.working`
+reads the pending value. Ordinary `settings.volume` access also sees pending
+values during an edit. These are views of one state, not copies.
+
+## Reject an accidental edit
+
+Add this continuation to the same file:
+
+```python
+try:
+    settings.volume = 3
+except RuntimeError:
+    print("start a transaction before editing")
+```
+
+There is no active transaction, so the assignment raises and the value remains
+8. Construction is allowed to supply initial managed values; later edits need
+the matching transaction.
+
+## Check your understanding
+
+If the first edit set `volume` to 9 instead, what would `after cancel` print?
+Answer: `9 70`. Rollback discards the second edit; it does not restore the
+original construction values or undo an earlier commit.
+
+The executable [settings example](../examples/settings.py) also demonstrates
+explicit manager-owned commit and rollback outside a `with` statement.
+
+Next, [understand fields and live views](Concepts.md). For a specific task, use
+the [guide index](index.md) directly.

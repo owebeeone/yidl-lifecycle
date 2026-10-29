@@ -1,5 +1,10 @@
 # Lifecycle transactions and views
 
+For the new end-user learning path, start at the [documentation index](index.md).
+This older URL and its headings remain available for existing links. The focused
+[transaction guide](Transactions.md), [initialization guide](Initialization.md)
+and [transaction reference](TransactionReference.md) expand the material below.
+
 This guide documents the current Lifecycle API. Start with
 [installation and the counter tutorial](GettingStarted.md); use the
 [field reference](Markers.md) when choosing policies. The filename is retained
